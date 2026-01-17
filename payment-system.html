@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JELILIAN - 付费升级</title>
+    <style>
+        body { font-family: system-ui; margin: 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; color: white; margin-bottom: 50px; }
+        .header h1 { font-size: 3rem; margin-bottom: 10px; }
+        .header p { font-size: 1.2rem; opacity: 0.9; }
+        
+        .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin: 50px 0; }
+        .pricing-card { 
+            background: white; border-radius: 20px; padding: 40px; text-align: center; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1); transition: transform 0.3s;
+            position: relative; overflow: hidden;
+        }
+        .pricing-card:hover { transform: translateY(-10px); }
+        .pricing-card.featured { 
+            border: 3px solid #6366f1; transform: scale(1.05);
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+        }
+        .pricing-card.featured::before {
+            content: "🔥 推荐"; position: absolute; top: 20px; right: -30px;
+            background: #6366f1; color: white; padding: 5px 40px;
+            transform: rotate(45deg); font-size: 12px; font-weight: bold;
+        }
+        
+        .plan-name { font-size: 1.5rem; font-weight: bold; color: #1f2937; margin-bottom: 10px; }
+        .plan-price { font-size: 3rem; font-weight: bold; color: #6366f1; margin-bottom: 5px; }
+        .plan-period { color: #6b7280; margin-bottom: 30px; }
+        .plan-features { text-align: left; margin: 30px 0; }
+        .plan-features li { 
+            list-style: none; padding: 8px 0; color: #374151;
+            position: relative; padding-left: 25px;
+        }
+        .plan-features li::before { 
+            content: "✅"; position: absolute; left: 0; 
+        }
+        .plan-features li.unavailable::before { content: "❌"; }
+        .plan-features li.unavailable { color: #9ca3af; text-decoration: line-through; }
+        
+        .btn { 
+            background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; 
+            border: none; padding: 15px 30px; border-radius: 10px; 
+            font-size: 1.1rem; font-weight: bold; cursor: pointer; 
+            transition: all 0.3s; width: 100%; margin-top: 20px;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3); }
+        .btn-secondary { background: linear-gradient(135deg, #6b7280, #4b5563); }
+        
+        .features-section { background: white; border-radius: 20px; padding: 50px; margin: 50px 0; }
+        .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px; margin-top: 40px; }
+        .feature-item { text-align: center; padding: 20px; }
+        .feature-icon { font-size: 3rem; margin-bottom: 20px; }
+        .feature-title { font-size: 1.3rem; font-weight: bold; color: #1f2937; margin-bottom: 15px; }
+        .feature-desc { color: #6b7280; line-height: 1.6; }
+        
+        .payment-modal { 
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;
+        }
+        .payment-content { 
+            background: white; border-radius: 20px; padding: 40px; max-width: 500px; 
+            width: 90%; text-align: center; position: relative;
+        }
+        .close-btn { 
+            position: absolute; top: 15px; right: 20px; font-size: 1.5rem; 
+            cursor: pointer; color: #6b7280;
+        }
+        
+        .payment-methods { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; margin: 30px 0; }
+        .payment-method { 
+            border: 2px solid #e5e7eb; border-radius: 10px; padding: 20px; 
+            cursor: pointer; transition: all 0.3s; text-align: center;
+        }
+        .payment-method:hover, .payment-method.selected { 
+            border-color: #6366f1; background: #f0f9ff; 
+        }
+        .payment-method img { width: 40px; height: 40px; margin-bottom: 10px; }
+        
+        .api-key-section { 
+            background: #f8fafc; border-radius: 15px; padding: 30px; margin: 30px 0;
+            border: 2px solid #e5e7eb;
+        }
+        .api-key-input { 
+            width: 100%; padding: 12px; border: 2px solid #e5e7eb; 
+            border-radius: 8px; font-family: monospace; margin: 10px 0;
+        }
+        
+        .success-message { 
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0); 
+            color: #065f46; padding: 20px; border-radius: 10px; 
+            margin: 20px 0; border: 2px solid #10b981;
+        }
+        
+        .faq-section { background: white; border-radius: 20px; padding: 50px; margin: 50px 0; }
+        .faq-item { margin: 20px 0; border-bottom: 1px solid #e5e7eb; padding-bottom: 20px; }
+        .faq-question { font-weight: bold; color: #1f2937; margin-bottom: 10px; cursor: pointer; }
+        .faq-answer { color: #6b7280; line-height: 1.6; display: none; }
+        .faq-question:hover { color: #6366f1; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💎 JELILIAN Pro</h1>
+            <p>解锁AI的无限可能，让创作更高效</p>
+            <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; margin-top: 20px;">
+                <div style="display: flex; justify-content: center; gap: 30px; flex-wrap: wrap;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 1.5rem; font-weight: bold;">10,000+</div>
+                        <div style="opacity: 0.8;">用户信赖</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 1.5rem; font-weight: bold;">99.9%</div>
+                        <div style="opacity: 0.8;">正常运行</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 1.5rem; font-weight: bold;">24/7</div>
+                        <div style="opacity: 0.8;">全天服务</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="pricing-grid">
+            <div class="pricing-card">
+                <div class="plan-name">免费版</div>
+                <div class="plan-price">¥0</div>
+                <div class="plan-period">永久免费</div>
+                <ul class="plan-features">
+                    <li>每日10次AI对话</li>
+                    <li>基础网站模板</li>
+                    <li>标准响应速度</li>
+                    <li class="unavailable">高级AI模型</li>
+                    <li class="unavailable">无限制使用</li>
+                    <li class="unavailable">优先技术支持</li>
+                    <li class="unavailable">自定义API密钥</li>
+                </ul>
+                <button class="btn btn-secondary" onclick="selectPlan('free')">当前方案</button>
+            </div>
+            
+            <div class="pricing-card featured">
+                <div class="plan-name">专业版</div>
+                <div class="plan-price">¥29</div>
+                <div class="plan-period">每月</div>
+                <ul class="plan-features">
+                    <li>无限AI对话</li>
+                    <li>所有网站模板</li>
+                    <li>极速响应</li>
+                    <li>GPT-4 + 千问Max</li>
+                    <li>自定义API密钥</li>
+                    <li>优先技术支持</li>
+                    <li>高级功能解锁</li>
+                </ul>
+                <button class="btn" onclick="selectPlan('pro')">立即升级</button>
+            </div>
+            
+            <div class="pricing-card">
+                <div class="plan-name">企业版</div>
+                <div class="plan-price">¥99</div>
+                <div class="plan-period">每月</div>
+                <ul class="plan-features">
+                    <li>专业版所有功能</li>
+                    <li>团队协作</li>
+                    <li>API接口调用</li>
+                    <li>私有化部署</li>
+                    <li>定制开发</li>
+                    <li>专属客服</li>
+                    <li>SLA保障</li>
+                </ul>
+                <button class="btn" onclick="selectPlan('enterprise')">联系销售</button>
+            </div>
+        </div>
+        
+        <div class="features-section">
+            <h2 style="text-align: center; color: #1f2937; margin-bottom: 20px;">🌟 为什么选择JELILIAN Pro？</h2>
+            <div class="features-grid">
+                <div class="feature-item">
+                    <div class="feature-icon">🚀</div>
+                    <div class="feature-title">极速响应</div>
+                    <div class="feature-desc">专业版用户享受优先处理，响应速度提升300%</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">🧠</div>
+                    <div class="feature-title">顶级AI模型</div>
+                    <div class="feature-desc">接入GPT-4、Claude、千问Max等最先进的AI模型</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">🔑</div>
+                    <div class="feature-title">自定义API</div>
+                    <div class="feature-desc">使用自己的API密钥，成本更低，隐私更安全</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">🛠️</div>
+                    <div class="feature-title">高级功能</div>
+                    <div class="feature-desc">代码生成、图像处理、数据分析等专业功能</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="faq-section">
+            <h2 style="text-align: center; color: #1f2937; margin-bottom: 30px;">❓ 常见问题</h2>
+            
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">如何使用自己的API密钥？</div>
+                <div class="faq-answer">升级到专业版后，您可以在设置中输入自己的OpenAI或阿里云API密钥，享受更低成本和更高隐私保护。</div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">支持哪些支付方式？</div>
+                <div class="faq-answer">支持微信支付、支付宝、银行卡等多种支付方式，安全便捷。</div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">可以随时取消订阅吗？</div>
+                <div class="faq-answer">是的，您可以随时在账户设置中取消订阅，已付费的周期内仍可正常使用。</div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">企业版有什么特殊服务？</div>
+                <div class="faq-answer">企业版提供私有化部署、定制开发、专属客服、SLA保障等企业级服务。</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 支付弹窗 -->
+    <div class="payment-modal" id="paymentModal">
+        <div class="payment-content">
+            <span class="close-btn" onclick="closePayment()">&times;</span>
+            <h2 id="paymentTitle">升级到专业版</h2>
+            <p id="paymentDesc">解锁所有高级功能，享受无限制AI服务</p>
+            
+            <div class="payment-methods">
+                <div class="payment-method" onclick="selectPayment('wechat')">
+                    <div style="font-size: 2rem;">💚</div>
+                    <div>微信支付</div>
+                </div>
+                <div class="payment-method" onclick="selectPayment('alipay')">
+                    <div style="font-size: 2rem;">💙</div>
+                    <div>支付宝</div>
+                </div>
+                <div class="payment-method" onclick="selectPayment('card')">
+                    <div style="font-size: 2rem;">💳</div>
+                    <div>银行卡</div>
+                </div>
+            </div>
+            
+            <div class="api-key-section">
+                <h3>🔑 设置您的API密钥 (可选)</h3>
+                <p style="color: #6b7280; font-size: 0.9rem;">使用自己的API密钥可以降低成本并提高隐私保护</p>
+                <input type="password" class="api-key-input" id="userApiKey" placeholder="输入您的API密钥 (可选)">
+                <p style="color: #6b7280; font-size: 0.8rem;">支持OpenAI、阿里云千问等主流AI服务商</p>
+            </div>
+            
+            <button class="btn" onclick="processPayment()">立即支付 ¥<span id="paymentAmount">29</span></button>
+            
+            <p style="color: #6b7280; font-size: 0.8rem; margin-top: 20px;">
+                点击支付即表示您同意我们的<a href="#" style="color: #6366f1;">服务条款</a>和<a href="#" style="color: #6366f1;">隐私政策</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        let selectedPlan = '';
+        let selectedPayment = '';
+        
+        function selectPlan(plan) {
+            selectedPlan = plan;
+            
+            if (plan === 'free') {
+                alert('您当前使用的就是免费版！');
+                return;
+            }
+            
+            if (plan === 'enterprise') {
+                alert('企业版需要定制服务，请联系我们的销售团队：contact@jelilian.com');
+                return;
+            }
+            
+            // 显示支付弹窗
+            document.getElementById('paymentModal').style.display = 'flex';
+            
+            if (plan === 'pro') {
+                document.getElementById('paymentTitle').textContent = '升级到专业版';
+                document.getElementById('paymentDesc').textContent = '解锁所有高级功能，享受无限制AI服务';
+                document.getElementById('paymentAmount').textContent = '29';
+            }
+        }
+        
+        function selectPayment(method) {
+            // 清除之前的选择
+            document.querySelectorAll('.payment-method').forEach(el => {
+                el.classList.remove('selected');
+            });
+            
+            // 选择当前支付方式
+            event.target.closest('.payment-method').classList.add('selected');
+            selectedPayment = method;
+        }
+        
+        function closePayment() {
+            document.getElementById('paymentModal').style.display = 'none';
+        }
+        
+        function processPayment() {
+            if (!selectedPayment) {
+                alert('请选择支付方式');
+                return;
+            }
+            
+            const apiKey = document.getElementById('userApiKey').value.trim();
+            
+            // 模拟支付处理
+            const paymentData = {
+                plan: selectedPlan,
+                payment_method: selectedPayment,
+                amount: selectedPlan === 'pro' ? 29 : 99,
+                api_key: apiKey || null,
+                timestamp: new Date().toISOString()
+            };
+            
+            // 这里应该调用真实的支付API
+            console.log('支付数据:', paymentData);
+            
+            // 模拟支付成功
+            setTimeout(() => {
+                showPaymentSuccess(paymentData);
+            }, 2000);
+            
+            // 显示处理中状态
+            document.querySelector('.payment-content').innerHTML = `
+                <div style="text-align: center; padding: 40px;">
+                    <div style="font-size: 3rem; margin-bottom: 20px;">⏳</div>
+                    <h3>正在处理支付...</h3>
+                    <p style="color: #6b7280;">请稍候，不要关闭页面</p>
+                </div>
+            `;
+        }
+        
+        function showPaymentSuccess(paymentData) {
+            document.querySelector('.payment-content').innerHTML = `
+                <div style="text-align: center; padding: 40px;">
+                    <div style="font-size: 4rem; margin-bottom: 20px;">🎉</div>
+                    <h2 style="color: #10b981;">支付成功！</h2>
+                    <div class="success-message">
+                        <strong>恭喜您成功升级到${paymentData.plan === 'pro' ? '专业版' : '企业版'}！</strong><br><br>
+                        • 订单号: ${generateOrderId()}<br>
+                        • 支付金额: ¥${paymentData.amount}<br>
+                        • 生效时间: 立即<br>
+                        ${paymentData.api_key ? '• API密钥: 已保存' : ''}
+                    </div>
+                    <button class="btn" onclick="goToApp()">开始使用</button>
+                    <button class="btn btn-secondary" onclick="closePayment()">稍后使用</button>
+                </div>
+            `;
+            
+            // 保存用户订阅信息到本地存储
+            localStorage.setItem('jelilian_subscription', JSON.stringify({
+                plan: paymentData.plan,
+                expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30天后过期
+                api_key: paymentData.api_key,
+                order_id: generateOrderId()
+            }));
+        }
+        
+        function generateOrderId() {
+            return 'JL' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substr(2, 5).toUpperCase();
+        }
+        
+        function goToApp() {
+            // 跳转到主应用
+            window.location.href = '/public-client.html';
+        }
+        
+        function toggleFaq(element) {
+            const answer = element.nextElementSibling;
+            const isVisible = answer.style.display === 'block';
+            
+            // 关闭所有FAQ
+            document.querySelectorAll('.faq-answer').forEach(el => {
+                el.style.display = 'none';
+            });
+            
+            // 切换当前FAQ
+            if (!isVisible) {
+                answer.style.display = 'block';
+            }
+        }
+        
+        // 检查用户订阅状态
+        function checkSubscription() {
+            const subscription = localStorage.getItem('jelilian_subscription');
+            if (subscription) {
+                const data = JSON.parse(subscription);
+                const now = new Date();
+                const expires = new Date(data.expires);
+                
+                if (now < expires) {
+                    // 用户有有效订阅
+                    document.querySelector('.header p').innerHTML = `
+                        您当前是<strong style="color: #10b981;">${data.plan === 'pro' ? '专业版' : '企业版'}</strong>用户 
+                        (到期时间: ${expires.toLocaleDateString()})
+                    `;
+                }
+            }
+        }
+        
+        // 页面加载时检查订阅状态
+        document.addEventListener('DOMContentLoaded', checkSubscription);
+    </script>
+</body>
+</html>

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>无CORS限制的API测试</title>
+    <style>
+        body { font-family: system-ui; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; }
+        .input-group { margin: 15px 0; }
+        .input-group label { display: block; margin-bottom: 5px; font-weight: 600; }
+        .input-group input, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; }
+        .btn { background: #6366f1; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; margin: 5px; }
+        .btn-success { background: #10b981; }
+        .btn-warning { background: #f59e0b; }
+        .result { margin-top: 20px; padding: 15px; border-radius: 6px; }
+        .success { background: #d1fae5; color: #065f46; }
+        .error { background: #fee2e2; color: #991b1b; }
+        .info { background: #dbeafe; color: #1e40af; }
+        .warning { background: #fef3c7; color: #92400e; }
+        .code { background: #f3f4f6; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 12px; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 无CORS限制的API测试</h1>
+        <p>这个版本使用代理服务器绕过CORS限制</p>
+        
+        <div class="input-group">
+            <label>阿里千问API密钥:</label>
+            <input type="password" id="apiKey" placeholder="输入以sk-开头的API密钥">
+        </div>
+        
+        <div class="input-group">
+            <label>测试消息:</label>
+            <textarea id="message" rows="3">你好，请介绍一下你自己</textarea>
+        </div>
+        
+        <button class="btn btn-success" onclick="testWithProxy()">使用代理测试API</button>
+        <button class="btn btn-warning" onclick="testWithJSONP()">使用JSONP测试</button>
+        <button class="btn" onclick="generateCurlCommand()">生成curl命令</button>
+        
+        <div id="result"></div>
+        
+        <div class="result warning">
+            <strong>💡 解决CORS问题的方法:</strong><br><br>
+            <strong>方法1: 本地服务器 (推荐)</strong><br>
+            <code>python -m http.server 8000</code><br>
+            然后访问: <code>http://localhost:8000</code><br><br>
+            
+            <strong>方法2: 使用代理服务器</strong><br>
+            • <a href="https://cors-anywhere.herokuapp.com/" target="_blank">CORS Anywhere</a><br>
+            • <a href="https://allorigins.win/" target="_blank">AllOrigins</a><br><br>
+            
+            <strong>方法3: 浏览器扩展</strong><br>
+            • 安装"CORS Unblock"扩展<br>
+            • 临时禁用CORS检查<br><br>
+            
+            <strong>方法4: 服务器端调用</strong><br>
+            • 在后端服务器中调用API<br>
+            • 避免浏览器CORS限制
+        </div>
+    </div>
+
+    <script>
+        async function testWithProxy() {
+            const apiKey = document.getElementById('apiKey').value.trim();
+            const message = document.getElementById('message').value.trim();
+            const resultDiv = document.getElementById('result');
+            
+            if (!apiKey) {
+                resultDiv.innerHTML = '<div class="result error">❌ 请输入API密钥</div>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<div class="result info">🔄 使用代理服务器测试...</div>';
+            
+            try {
+                // 使用CORS代理
+                const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+                const targetUrl = 'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation';
+                
+                const response = await fetch(proxyUrl + targetUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`,
+                        'X-DashScope-SSE': 'disable',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        model: 'qwen-turbo',
+                        input: {
+                            messages: [
+                                { role: 'user', content: message }
+                            ]
+                        },
+                        parameters: {
+                            result_format: 'message',
+                            max_tokens: 500
+                        }
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.output && data.output.choices) {
+                    const aiResponse = data.output.choices[0].message.content;
+                    resultDiv.innerHTML = `
+                        <div class="result success">
+                            ✅ API调用成功！<br><br>
+                            <strong>AI回复:</strong><br>
+                            <div class="code">${aiResponse}</div>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="result error">
+                            ❌ API调用失败<br>
+                            <div class="code">${JSON.stringify(data, null, 2)}</div>
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        ❌ 代理请求失败: ${error.message}<br><br>
+                        <strong>可能原因:</strong><br>
+                        • 代理服务器不可用<br>
+                        • API密钥无效<br>
+                        • 网络连接问题
+                    </div>
+                `;
+            }
+        }
+        
+        async function testWithJSONP() {
+            const resultDiv = document.getElementById('result');
+            
+            resultDiv.innerHTML = `
+                <div class="result warning">
+                    ⚠️ JSONP方法不适用于阿里千问API<br><br>
+                    <strong>原因:</strong> 阿里千问API不支持JSONP回调<br>
+                    <strong>建议:</strong> 使用本地服务器或代理服务器
+                </div>
+            `;
+        }
+        
+        function generateCurlCommand() {
+            const apiKey = document.getElementById('apiKey').value.trim();
+            const message = document.getElementById('message').value.trim();
+            const resultDiv = document.getElementById('result');
+            
+            if (!apiKey) {
+                resultDiv.innerHTML = '<div class="result error">❌ 请输入API密钥</div>';
+                return;
+            }
+            
+            const curlCommand = `curl -X POST "https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation" \\
+  -H "Content-Type: application/json" \\
+  -H "Authorization: Bearer ${apiKey}" \\
+  -H "X-DashScope-SSE: disable" \\
+  -d '{
+    "model": "qwen-turbo",
+    "input": {
+      "messages": [
+        {"role": "user", "content": "${message}"}
+      ]
+    },
+    "parameters": {
+      "result_format": "message",
+      "max_tokens": 500
+    }
+  }'`;
+            
+            resultDiv.innerHTML = `
+                <div class="result info">
+                    <strong>🔧 curl命令测试:</strong><br>
+                    <div class="code">${curlCommand}</div>
+                    <br>
+                    <strong>使用方法:</strong><br>
+                    1. 复制上面的命令<br>
+                    2. 在终端/命令行中运行<br>
+                    3. 如果curl命令成功，说明API密钥和格式都正确<br>
+                    4. 问题就是CORS跨域限制
+                </div>
+            `;
+        }
+        
+        // 页面加载时显示当前环境信息
+        document.addEventListener('DOMContentLoaded', function() {
+            const protocol = location.protocol;
+            const hostname = location.hostname;
+            
+            let envInfo = '';
+            if (protocol === 'file:') {
+                envInfo = `
+                    <div class="result error">
+                        ❌ 当前环境: 本地文件 (${protocol})<br>
+                        <strong>问题:</strong> 浏览器阻止CORS请求<br>
+                        <strong>解决:</strong> 启动本地服务器后访问 http://localhost:8000
+                    </div>
+                `;
+            } else {
+                envInfo = `
+                    <div class="result success">
+                        ✅ 当前环境: ${protocol}//${hostname}<br>
+                        应该可以正常发起API请求
+                    </div>
+                `;
+            }
+            
+            document.getElementById('result').innerHTML = envInfo;
+        });
+    </script>
+</body>
+</html>

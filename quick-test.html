@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>JELILIAN 快速测试</title>
+    <style>
+        body { font-family: system-ui; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; }
+        .btn { background: #6366f1; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; margin: 10px; }
+        .result { margin: 20px 0; padding: 15px; border-radius: 6px; }
+        .success { background: #d1fae5; color: #065f46; }
+        .error { background: #fee2e2; color: #991b1b; }
+        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 JELILIAN 快速测试</h1>
+        
+        <button class="btn" onclick="testServer()">测试服务器连接</button>
+        <button class="btn" onclick="testAPI()">测试API</button>
+        
+        <input type="password" id="apiKey" placeholder="输入API密钥测试完整功能">
+        <button class="btn" onclick="testChat()">测试AI对话</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000/api';
+        
+        async function testServer() {
+            const result = document.getElementById('result');
+            try {
+                const response = await fetch(`${API_BASE}/providers`);
+                const data = await response.json();
+                result.innerHTML = `<div class="result success">✅ 服务器连接成功！支持 ${data.providers.length} 个AI服务商</div>`;
+            } catch (error) {
+                result.innerHTML = `<div class="result error">❌ 服务器连接失败: ${error.message}</div>`;
+            }
+        }
+        
+        async function testAPI() {
+            const result = document.getElementById('result');
+            try {
+                const response = await fetch(`${API_BASE}/test`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ provider: 'qwen', apiKey: 'sk-test123' })
+                });
+                const data = await response.json();
+                result.innerHTML = `<div class="result ${data.success ? 'success' : 'error'}">
+                    ${data.success ? '✅' : '❌'} API测试: ${data.error || '连接正常'}
+                </div>`;
+            } catch (error) {
+                result.innerHTML = `<div class="result error">❌ API测试失败: ${error.message}</div>`;
+            }
+        }
+        
+        async function testChat() {
+            const apiKey = document.getElementById('apiKey').value;
+            const result = document.getElementById('result');
+            
+            if (!apiKey) {
+                result.innerHTML = `<div class="result error">❌ 请输入API密钥</div>`;
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: '你好',
+                        provider: 'qwen',
+                        apiKey: apiKey
+                    })
+                });
+                const data = await response.json();
+                result.innerHTML = `<div class="result ${data.success ? 'success' : 'error'}">
+                    ${data.success ? '✅ AI对话成功!' : '❌ 对话失败: ' + data.error}
+                    ${data.text ? '<br><strong>AI回复:</strong> ' + data.text.substring(0, 100) + '...' : ''}
+                </div>`;
+            } catch (error) {
+                result.innerHTML = `<div class="result error">❌ 对话测试失败: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>

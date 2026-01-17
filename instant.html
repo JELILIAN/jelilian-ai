@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JELILIAN - 即时响应版</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: system-ui; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; margin-bottom: 40px; }
+        .header h1 { font-size: 3rem; color: #6366f1; margin-bottom: 16px; }
+        .header p { font-size: 1.2rem; color: #64748b; }
+        .chat-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .chat-box { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .chat-messages { height: 400px; overflow-y: auto; margin-bottom: 20px; padding: 10px; background: #f8fafc; border-radius: 8px; }
+        .message { margin-bottom: 16px; }
+        .user-msg { background: #6366f1; color: white; padding: 12px 16px; border-radius: 18px 4px 18px 18px; margin-left: auto; max-width: 80%; }
+        .ai-msg { background: #f1f5f9; color: #1e293b; padding: 12px 16px; border-radius: 18px 18px 18px 4px; max-width: 80%; }
+        .input-area { display: flex; gap: 12px; }
+        .input-area input { flex: 1; padding: 12px; border: 1px solid #e2e8f0; border-radius: 20px; outline: none; }
+        .input-area button { background: #6366f1; color: white; border: none; padding: 12px 20px; border-radius: 20px; cursor: pointer; }
+        .preview-area { background: #f8fafc; border-radius: 8px; padding: 20px; min-height: 400px; }
+        .quick-btns { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+        .quick-btn { background: #f1f5f9; border: none; padding: 8px 16px; border-radius: 16px; cursor: pointer; font-size: 12px; }
+        .quick-btn:hover { background: #6366f1; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>JELILIAN ⚡</h1>
+            <p>即时响应AI助手 - 零延迟体验</p>
+        </div>
+        
+        <div class="chat-container">
+            <div class="chat-box">
+                <h3>💬 AI对话</h3>
+                <div class="quick-btns">
+                    <button class="quick-btn" onclick="quickSend('创建食品网站')">🍕 食品网站</button>
+                    <button class="quick-btn" onclick="quickSend('制作餐厅网站')">🍽️ 餐厅网站</button>
+                    <button class="quick-btn" onclick="quickSend('电商平台')">🛒 电商平台</button>
+                    <button class="quick-btn" onclick="quickSend('营销文案')">✍️ 营销文案</button>
+                </div>
+                <div class="chat-messages" id="messages">
+                    <div class="message">
+                        <div class="ai-msg">您好！我是JELILIAN AI助手，可以即时帮您创建网站、内容等。请输入需求！</div>
+                    </div>
+                </div>
+                <div class="input-area">
+                    <input type="text" id="userInput" placeholder="输入您的需求..." onkeypress="handleEnter(event)">
+                    <button onclick="sendMessage()">发送</button>
+                </div>
+            </div>
+            
+            <div class="chat-box">
+                <h3>📱 实时预览</h3>
+                <div class="preview-area" id="preview">
+                    <div style="text-align: center; color: #64748b; margin-top: 150px;">
+                        <div style="font-size: 3rem; margin-bottom: 16px;">⚡</div>
+                        <h3>即时预览</h3>
+                        <p>输入需求后立即显示结果</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 即时响应数据库
+        const responses = {
+            '食品': {
+                text: `🍕 <strong>食品网站已生成！</strong><br><br>
+                ✅ 美食展示页面<br>
+                ✅ 在线订购系统<br>
+                ✅ 配送管理<br>
+                ✅ 支付集成<br>
+                ✅ 移动端优化<br><br>
+                <span style="color:#10b981;">🎉 网站已就绪！</span>`,
+                preview: `<div style="padding:20px;background:white;border-radius:8px;border-left:4px solid #f59e0b;">
+                    <h2 style="color:#f59e0b;margin-bottom:20px;">🍕 美食天地</h2>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+                        <div style="background:#fef3c7;padding:16px;border-radius:8px;text-align:center;">
+                            <div style="font-size:2rem;margin-bottom:8px;">🍕</div>
+                            <h4>意式披萨</h4>
+                            <p style="color:#f59e0b;font-weight:600;">¥68</p>
+                        </div>
+                        <div style="background:#fef3c7;padding:16px;border-radius:8px;text-align:center;">
+                            <div style="font-size:2rem;margin-bottom:8px;">🍔</div>
+                            <h4>经典汉堡</h4>
+                            <p style="color:#f59e0b;font-weight:600;">¥45</p>
+                        </div>
+                    </div>
+                    <button style="background:#f59e0b;color:white;border:none;padding:12px 24px;border-radius:8px;width:100%;font-weight:600;">🛒 立即订购</button>
+                </div>`
+            },
+            '餐厅': {
+                text: `🍽️ <strong>餐厅网站已生成！</strong><br><br>
+                ✅ 菜单展示系统<br>
+                ✅ 在线预订功能<br>
+                ✅ 餐厅介绍页面<br>
+                ✅ 联系方式地图<br>
+                ✅ 评价系统<br><br>
+                <span style="color:#10b981;">🎉 可以立即上线！</span>`,
+                preview: `<div style="padding:20px;background:white;border-radius:8px;border-left:4px solid #d97706;">
+                    <h2 style="color:#d97706;margin-bottom:20px;">🍽️ 雅致餐厅</h2>
+                    <div style="background:#fef3c7;padding:16px;border-radius:8px;margin-bottom:16px;">
+                        <h4 style="margin-bottom:12px;">今日特色</h4>
+                        <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                            <span>宫保鸡丁</span><span style="color:#d97706;font-weight:600;">¥38</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                            <span>麻婆豆腐</span><span style="color:#d97706;font-weight:600;">¥28</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;">
+                            <span>红烧肉</span><span style="color:#d97706;font-weight:600;">¥48</span>
+                        </div>
+                    </div>
+                    <button style="background:#d97706;color:white;border:none;padding:12px 24px;border-radius:8px;width:100%;font-weight:600;">📞 立即预订</button>
+                </div>`
+            },
+            '电商': {
+                text: `🛒 <strong>电商平台已生成！</strong><br><br>
+                ✅ 商品管理系统<br>
+                ✅ 购物车功能<br>
+                ✅ 支付集成<br>
+                ✅ 订单管理<br>
+                ✅ 用户系统<br><br>
+                <span style="color:#10b981;">🎉 电商网站完成！</span>`,
+                preview: `<div style="padding:20px;background:white;border-radius:8px;border-left:4px solid #10b981;">
+                    <h2 style="color:#10b981;margin-bottom:20px;">🛒 在线商城</h2>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+                        <div style="background:#f0fdf4;padding:16px;border-radius:8px;text-align:center;">
+                            <div style="font-size:2rem;margin-bottom:8px;">📱</div>
+                            <h4>智能手机</h4>
+                            <p style="color:#10b981;font-weight:600;">¥2999</p>
+                        </div>
+                        <div style="background:#f0fdf4;padding:16px;border-radius:8px;text-align:center;">
+                            <div style="font-size:2rem;margin-bottom:8px;">💻</div>
+                            <h4>笔记本</h4>
+                            <p style="color:#10b981;font-weight:600;">¥5999</p>
+                        </div>
+                    </div>
+                    <button style="background:#10b981;color:white;border:none;padding:12px 24px;border-radius:8px;width:100%;font-weight:600;">🛒 加入购物车</button>
+                </div>`
+            },
+            '文案': {
+                text: `✍️ <strong>营销文案已生成！</strong><br><br>
+                ✅ 吸引人的标题<br>
+                ✅ 核心卖点提炼<br>
+                ✅ 行动号召<br>
+                ✅ SEO优化<br>
+                ✅ 多平台适配<br><br>
+                <span style="color:#10b981;">🎉 文案创作完成！</span>`,
+                preview: `<div style="padding:20px;background:white;border-radius:8px;border-left:4px solid #8b5cf6;">
+                    <h2 style="color:#8b5cf6;margin-bottom:20px;">✍️ 营销文案</h2>
+                    <div style="background:#faf5ff;padding:16px;border-radius:8px;margin-bottom:16px;">
+                        <h4 style="color:#6b21a8;margin-bottom:12px;">🎯 核心卖点</h4>
+                        <p style="color:#7c3aed;line-height:1.6;">
+                            "革命性AI技术，让您的业务效率提升300%！现在体验，享受专属优惠。"
+                        </p>
+                    </div>
+                    <div style="background:#ecfdf5;padding:12px;border-radius:6px;text-align:center;">
+                        <p style="color:#10b981;font-weight:600;margin:0;">✅ SEO优化完成</p>
+                    </div>
+                </div>`
+            }
+        };
+        
+        function handleEnter(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+        
+        function quickSend(message) {
+            document.getElementById('userInput').value = message;
+            sendMessage();
+        }
+        
+        function sendMessage() {
+            const input = document.getElementById('userInput');
+            const message = input.value.trim();
+            if (!message) return;
+            
+            // 立即添加用户消息
+            addMessage(message, 'user');
+            input.value = '';
+            
+            // 立即生成AI响应 - 零延迟
+            const response = getResponse(message);
+            addMessage(response.text, 'ai');
+            updatePreview(response.preview);
+        }
+        
+        function addMessage(content, type) {
+            const messages = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+            
+            if (type === 'user') {
+                messageDiv.innerHTML = `<div class="user-msg">${content}</div>`;
+            } else {
+                messageDiv.innerHTML = `<div class="ai-msg">${content}</div>`;
+            }
+            
+            messages.appendChild(messageDiv);
+            messages.scrollTop = messages.scrollHeight;
+        }
+        
+        function getResponse(message) {
+            // 即时关键词匹配
+            for (const [key, response] of Object.entries(responses)) {
+                if (message.includes(key)) {
+                    return response;
+                }
+            }
+            
+            // 默认响应
+            return {
+                text: `⚡ <strong>AI已分析您的需求！</strong><br><br>
+                我可以立即帮您：<br>
+                🌐 构建专业网站<br>
+                ✍️ 创作优质内容<br>
+                🎨 设计视觉素材<br>
+                📊 处理数据分析<br><br>
+                <strong>请提供更具体的需求！</strong>`,
+                preview: `<div style="text-align:center;color:#64748b;margin-top:100px;">
+                    <div style="font-size:3rem;margin-bottom:16px;">🚀</div>
+                    <h3>AI已就绪</h3>
+                    <p>请描述您的具体需求</p>
+                </div>`
+            };
+        }
+        
+        function updatePreview(content) {
+            document.getElementById('preview').innerHTML = content;
+        }
+    </script>
+</body>
+</html>

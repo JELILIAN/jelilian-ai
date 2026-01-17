@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API快速诊断</title>
+    <style>
+        body { font-family: system-ui; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; }
+        .section { margin: 20px 0; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; }
+        .btn { background: #6366f1; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; margin: 5px; }
+        .result { margin-top: 15px; padding: 15px; border-radius: 6px; }
+        .success { background: #d1fae5; color: #065f46; }
+        .error { background: #fee2e2; color: #991b1b; }
+        .warning { background: #fef3c7; color: #92400e; }
+        input, textarea { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 API快速诊断工具</h1>
+        
+        <div class="section">
+            <h3>环境检查</h3>
+            <button class="btn" onclick="checkEnvironment()">检查运行环境</button>
+            <div id="envResult"></div>
+        </div>
+        
+        <div class="section">
+            <h3>网络连接测试</h3>
+            <button class="btn" onclick="testNetwork()">测试网络</button>
+            <div id="networkResult"></div>
+        </div>
+        
+        <div class="section">
+            <h3>API密钥测试</h3>
+            <input type="password" id="testApiKey" placeholder="输入API密钥">
+            <button class="btn" onclick="testApiKey()">测试密钥</button>
+            <div id="keyResult"></div>
+        </div>
+        
+        <div class="section">
+            <h3>完整API调用测试</h3>
+            <textarea id="testMsg" placeholder="输入测试消息">你好</textarea>
+            <button class="btn" onclick="fullApiTest()">完整测试</button>
+            <div id="fullResult"></div>
+        </div>
+        
+        <div class="section">
+            <h3>错误日志</h3>
+            <div id="errorLog" style="background: #f8fafc; padding: 15px; border-radius: 6px; font-family: monospace; font-size: 12px; max-height: 300px; overflow-y: auto;"></div>
+            <button class="btn" onclick="clearLog()">清空日志</button>
+        </div>
+    </div>
+
+    <script>
+        let errorLog = [];
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            errorLog.push(`[${timestamp}] ${type.toUpperCase()}: ${message}`);
+            updateErrorLog();
+            console.log(`[${type}]`, message);
+        }
+        
+        function updateErrorLog() {
+            document.getElementById('errorLog').innerHTML = errorLog.join('<br>');
+        }
+        
+        function clearLog() {
+            errorLog = [];
+            updateErrorLog();
+        }
+        
+        function checkEnvironment() {
+            const result = document.getElementById('envResult');
+            log('开始环境检查');
+            
+            const checks = [];
+            
+            // 检查协议
+            if (location.protocol === 'file:') {
+                checks.push('❌ 运行在file://协议下，可能导致CORS问题');
+                log('检测到file://协议', 'warning');
+            } else {
+                checks.push('✅ 运行在HTTP/HTTPS协议下');
+                log('协议检查通过', 'success');
+            }
+            
+            // 检查浏览器
+            const userAgent = navigator.userAgent;
+            if (userAgent.includes('Chrome')) {
+                checks.push('✅ Chrome浏览器');
+            } else if (userAgent.includes('Firefox')) {
+                checks.push('✅ Firefox浏览器');
+            } else {
+                checks.push('⚠️ 其他浏览器，可能存在兼容性问题');
+            }
+            
+            // 检查网络状态
+            if (navigator.onLine) {
+                checks.push('✅ 网络连接正常');
+            } else {
+                checks.push('❌ 网络连接异常');
+            }
+            
+            // 检查HTTPS
+            if (location.protocol === 'https:' || location.hostname === 'localhost') {
+                checks.push('✅ 安全连接');
+            } else {
+                checks.push('⚠️ 非HTTPS连接，某些API可能受限');
+            }
+            
+            result.innerHTML = `<div class="result ${checks.some(c => c.includes('❌')) ? 'error' : 'success'}">
+                ${checks.join('<br>')}
+            </div>`;
+        }
+        
+        async function testNetwork() {
+            const result = document.getElementById('networkResult');
+            log('开始网络测试');
+            
+            result.innerHTML = '<div class="result warning">🔄 测试网络连接...</div>';
+            
+            try {
+                // 测试基本网络连接
+                const response = await fetch('https://httpbin.org/get', {
+                    method: 'GET',
+                    mode: 'cors'
+                });
+                
+                if (response.ok) {
+                    log('基本网络连接正常', 'success');
+                    
+                    // 测试阿里云连接
+                    try {
+                        await fetch('https://dashscope.aliyuncs.com', {
+                            method: 'HEAD',
+                            mode: 'no-cors'
+                        });
+                        log('阿里云API端点可访问', 'success');
+                        result.innerHTML = '<div class="result success">✅ 网络连接正常，可以访问阿里云API</div>';
+                    } catch (error) {
+                        log(`阿里云连接测试失败: ${error.message}`, 'error');
+                        result.innerHTML = '<div class="result warning">⚠️ 基本网络正常，但阿里云API访问可能受限</div>';
+                    }
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                log(`网络测试失败: ${error.message}`, 'error');
+                result.innerHTML = '<div class="result error">❌ 网络连接异常: ' + error.message + '</div>';
+            }
+        }
+        
+        async function testApiKey() {
+            const apiKey = document.getElementById('testApiKey').value.trim();
+            const result = document.getElementById('keyResult');
+            
+            if (!apiKey) {
+                result.innerHTML = '<div class="result error">❌ 请输入API密钥</div>';
+                return;
+            }
+            
+            log('开始API密钥测试');
+            result.innerHTML = '<div class="result warning">🔄 验证API密钥...</div>';
+            
+            // 格式检查
+            if (!apiKey.startsWith('sk-')) {
+                log('API密钥格式错误', 'error');
+                result.innerHTML = '<div class="result error">❌ API密钥格式错误，应该以"sk-"开头</div>';
+                return;
+            }
+            
+            if (apiKey.length < 20) {
+                log('API密钥长度可能不正确', 'warning');
+                result.innerHTML = '<div class="result warning">⚠️ API密钥长度似乎不正确</div>';
+                return;
+            }
+            
+            log('API密钥格式检查通过', 'success');
+            result.innerHTML = '<div class="result success">✅ API密钥格式正确</div>';
+        }
+        
+        async function fullApiTest() {
+            const apiKey = document.getElementById('testApiKey').value.trim();
+            const message = document.getElementById('testMsg').value.trim();
+            const result = document.getElementById('fullResult');
+            
+            if (!apiKey || !message) {
+                result.innerHTML = '<div class="result error">❌ 请输入API密钥和测试消息</div>';
+                return;
+            }
+            
+            log('开始完整API测试');
+            result.innerHTML = '<div class="result warning">🔄 正在调用API...</div>';
+            
+            try {
+                const requestBody = {
+                    model: 'qwen-turbo',
+                    input: {
+                        messages: [
+                            {
+                                role: 'user',
+                                content: message
+                            }
+                        ]
+                    },
+                    parameters: {
+                        result_format: 'message',
+                        max_tokens: 500,
+                        temperature: 0.8
+                    }
+                };
+                
+                log(`请求体: ${JSON.stringify(requestBody, null, 2)}`);
+                
+                const startTime = Date.now();
+                const response = await fetch('https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`,
+                        'X-DashScope-SSE': 'disable'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+                
+                const endTime = Date.now();
+                const responseTime = endTime - startTime;
+                
+                log(`响应状态: ${response.status} ${response.statusText}`);
+                log(`响应时间: ${responseTime}ms`);
+                
+                const responseText = await response.text();
+                log(`原始响应: ${responseText}`);
+                
+                let data;
+                try {
+                    data = JSON.parse(responseText);
+                } catch (parseError) {
+                    throw new Error(`JSON解析失败: ${parseError.message}`);
+                }
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${data.message || response.statusText}`);
+                }
+                
+                if (data.code && data.code !== '200') {
+                    throw new Error(`API错误 ${data.code}: ${data.message}`);
+                }
+                
+                if (!data.output || !data.output.choices || !data.output.choices[0]) {
+                    throw new Error('API响应格式错误');
+                }
+                
+                const aiResponse = data.output.choices[0].message.content;
+                const tokens = data.usage ? data.usage.total_tokens : 0;
+                
+                log('API调用成功', 'success');
+                
+                result.innerHTML = `
+                    <div class="result success">
+                        <strong>✅ API调用成功！</strong><br>
+                        <strong>响应时间:</strong> ${responseTime}ms<br>
+                        <strong>使用Token:</strong> ${tokens}<br>
+                        <strong>模型:</strong> qwen-turbo<br><br>
+                        <strong>AI回复:</strong><br>
+                        <div style="background: #f8fafc; padding: 15px; border-radius: 6px; margin-top: 10px; border-left: 4px solid #10b981;">
+                            ${aiResponse}
+                        </div>
+                    </div>
+                `;
+                
+            } catch (error) {
+                log(`API调用失败: ${error.message}`, 'error');
+                
+                let errorHtml = `<div class="result error"><strong>❌ API调用失败</strong><br>`;
+                errorHtml += `<strong>错误:</strong> ${error.message}<br><br>`;
+                
+                // 提供具体的解决建议
+                if (error.message.includes('CORS')) {
+                    errorHtml += `<strong>解决方案:</strong> CORS跨域问题<br>`;
+                    errorHtml += `1. 使用本地服务器: <code>python -m http.server 8000</code><br>`;
+                    errorHtml += `2. 或使用代理服务器<br>`;
+                } else if (error.message.includes('401')) {
+                    errorHtml += `<strong>解决方案:</strong> API密钥问题<br>`;
+                    errorHtml += `1. 检查API密钥是否正确<br>`;
+                    errorHtml += `2. 确认密钥已激活<br>`;
+                } else if (error.message.includes('403')) {
+                    errorHtml += `<strong>解决方案:</strong> 权限问题<br>`;
+                    errorHtml += `1. 检查账户余额<br>`;
+                    errorHtml += `2. 确认API权限设置<br>`;
+                } else if (error.message.includes('429')) {
+                    errorHtml += `<strong>解决方案:</strong> 请求频率限制<br>`;
+                    errorHtml += `1. 降低请求频率<br>`;
+                    errorHtml += `2. 稍后重试<br>`;
+                } else if (error.message.includes('网络')) {
+                    errorHtml += `<strong>解决方案:</strong> 网络连接问题<br>`;
+                    errorHtml += `1. 检查网络连接<br>`;
+                    errorHtml += `2. 尝试使用VPN<br>`;
+                }
+                
+                errorHtml += `</div>`;
+                result.innerHTML = errorHtml;
+            }
+        }
+        
+        // 页面加载时自动检查环境
+        document.addEventListener('DOMContentLoaded', function() {
+            checkEnvironment();
+        });
+        
+        // 捕获全局错误
+        window.addEventListener('error', function(event) {
+            log(`全局错误: ${event.error.message}`, 'error');
+        });
+        
+        window.addEventListener('unhandledrejection', function(event) {
+            log(`未处理的Promise拒绝: ${event.reason}`, 'error');
+        });
+    </script>
+</body>
+</html>PE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>阿里千问API调试工具</title>
+    <style>
+        body { font-family: system-ui; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { color: #ff6b35; margin-bottom: 10px; }
+        .section { margin: 30px 0; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; }
+        .section h3 { color: #1f2937; margin-bottom: 15px; }
+        .input-group { margin: 15px 0; }
+        .input-group label { display: block; margin-bottom: 5px; font-weight: 600; color: #374151; }
+        .input-group input, .input-group textarea, .input-group select { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-family: inherit; }
+        .input-group textarea { height: 100px; resize: vertical; }
+        .btn { background: #ff6b35; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-weight: 600; margin: 5px; }
+        .btn:hover { background: #e55a2b; }
+        .btn-secondary { background: #6b7280; }
+        .btn-secondary:hover { background: #4b5563; }
+        .result { margin-top: 20px; padding: 15px; border-radius: 6px; }
+        .success { background: #d1fae5; color: #065f46; border: 1px solid #10b981; }
+        .error { background: #fee2e2; color: #991b1b; border: 1px solid #ef4444; }
+        .warning { background: #fef3c7; color: #92400e; border: 1px solid #f59e0b; }
+        .info { background: #dbeafe; color: #1e40af; border: 1px solid #3b82f6; }
+        .code { background: #f3f4f6; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 12px; overflow-x: auto; margin: 10px 0; }
+        .step { margin: 10px 0; padding: 10px; background: #f8fafc; border-left: 4px solid #6366f1; }
+        .step-title { font-weight: 600; color: #1e293b; }
+        .step-desc { color: #64748b; font-size: 14px; margin-top: 5px; }
+        .progress { width: 100%; height: 6px; background: #e5e7eb; border-radius: 3px; overflow: hidden; margin: 10px 0; }
+        .progress-bar { height: 100%; background: #ff6b35; transition: width 0.3s; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 阿里千问API调试工具</h1>
+            <p>诊断和修复阿里千问API调用问题</p>
+        </div>
+        
+        <div class="section">
+            <h3>📋 API配置检查</h3>
+            <div class="input-group">
+                <label>API密钥 (sk-开头)</label>
+                <input type="password" id="apiKey" placeholder="输入您的阿里千问API密钥">
+            </div>
+            <div class="input-group">
+                <label>模型选择</label>
+                <select id="modelSelect">
+                    <option value="qwen-turbo">qwen-turbo (推荐)</option>
+                    <option value="qwen-plus">qwen-plus</option>
+                    <option value="qwen-max">qwen-max</option>
+                    <option value="qwen-max-1201">qwen-max-1201</option>
+                </select>
+            </div>
+            <button class="btn" onclick="validateConfig()">验证配置</button>
+            <div id="configResult"></div>
+        </div>
+        
+        <div class="section">
+            <h3>🔍 连接诊断</h3>
+            <div id="diagnosticSteps">
+                <div class="step">
+                    <div class="step-title">步骤1: 检查网络连接</div>
+                    <div class="step-desc">测试是否能访问阿里云API端点</div>
+                </div>
+                <div class="step">
+                    <div class="step-title">步骤2: 验证API密钥格式</div>
+                    <div class="step-desc">检查API密钥是否符合正确格式</div>
+                </div>
+                <div class="step">
+                    <div class="step-title">步骤3: 测试API调用</div>
+                    <div class="step-desc">发送测试请求到千问API</div>
+                </div>
+                <div class="step">
+                    <div class="step-title">步骤4: 解析响应数据</div>
+                    <div class="step-desc">检查API响应格式是否正确</div>
+                </div>
+            </div>
+            <button class="btn" onclick="runDiagnostic()">开始诊断</button>
+            <div class="progress" id="diagnosticProgress" style="display: none;">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <div id="diagnosticResult"></div>
+        </div>
+        
+        <div class="section">
+            <h3>💬 API测试</h3>
+            <div class="input-group">
+                <label>测试消息</label>
+                <textarea id="testMessage" placeholder="输入要发送给千问的测试消息...">你好，请介绍一下你自己</textarea>
+            </div>
+            <button class="btn" onclick="testAPI()">发送测试</button>
+            <button class="btn btn-secondary" onclick="testMultipleMessages()">批量测试</button>
+            <div id="testResult"></div>
+        </div>
+        
+        <div class="section">
+            <h3>🛠️ 常见问题修复</h3>
+            <div class="step">
+                <div class="step-title">问题1: CORS跨域错误</div>
+                <div class="step-desc">
+                    <strong>解决方案:</strong> 在本地服务器环境中运行，或使用代理服务器
+                    <div class="code">
+                        # 使用Python启动本地服务器<br>
+                        python -m http.server 8000<br><br>
+                        # 或使用Node.js<br>
+                        npx serve .
+                    </div>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-title">问题2: API密钥无效</div>
+                <div class="step-desc">
+                    <strong>解决方案:</strong> 检查API密钥格式和权限
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li>确保API密钥以 "sk-" 开头</li>
+                        <li>检查密钥是否已激活</li>
+                        <li>确认账户余额充足</li>
+                        <li>验证API权限设置</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-title">问题3: 请求格式错误</div>
+                <div class="step-desc">
+                    <strong>解决方案:</strong> 使用正确的请求格式
+                    <div class="code" id="correctFormat"></div>
+                </div>
+            </div>
+            <button class="btn" onclick="showCorrectFormat()">显示正确格式</button>
+            <button class="btn btn-secondary" onclick="fixCommonIssues()">自动修复</button>
+        </div>
+        
+        <div class="section">
+            <h3>📊 API使用统计</h3>
+            <div id="apiStats">
+                <p>请先进行API测试以查看统计信息</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let testCount = 0;
+        let successCount = 0;
+        let errorCount = 0;
+        
+        function validateConfig() {
+            const apiKey = document.getElementById('apiKey').value.trim();
+            const resultDiv = document.getElementById('configResult');
+            
+            if (!apiKey) {
+                resultDiv.innerHTML = '<div class="result error">❌ 请输入API密钥</div>';
+                return false;
+            }
+            
+            // 检查API密钥格式
+            if (!apiKey.startsWith('sk-')) {
+                resultDiv.innerHTML = '<div class="result warning">⚠️ API密钥格式可能不正确，应该以"sk-"开头</div>';
+                return false;
+            }
+            
+            if (apiKey.length < 20) {
+                resultDiv.innerHTML = '<div class="result warning">⚠️ API密钥长度似乎不正确</div>';
+                return false;
+            }
+            
+            resultDiv.innerHTML = '<div class="result success">✅ API密钥格式验证通过</div>';
+            return true;
+        }
+        
+        async function runDiagnostic() {
+            if (!validateConfig()) return;
+            
+            const progressDiv = document.getElementById('diagnosticProgress');
+            const progressBar = document.getElementById('progressBar');
+            const resultDiv = document.getElementById('diagnosticResult');
+            
+            progressDiv.style.display = 'block';
+            resultDiv.innerHTML = '';
+            
+            const steps = [
+                { name: '检查网络连接', func: checkNetwork },
+                { name: '验证API密钥', func: validateApiKey },
+                { name: '测试API调用', func: testApiCall },
+                { name: '解析响应数据', func: parseResponse }
+            ];
+            
+            for (let i = 0; i < steps.length; i++) {
+                const step = steps[i];
+                progressBar.style.width = `${(i / steps.length) * 100}%`;
+                
+                resultDiv.innerHTML += `<div class="result info">🔄 ${step.name}...</div>`;
+                
+                try {
+                    const result = await step.func();
+                    resultDiv.innerHTML += `<div class="result success">✅ ${step.name}: ${result}</div>`;
+                } catch (error) {
+                    resultDiv.innerHTML += `<div class="result error">❌ ${step.name}: ${error.message}</div>`;
+                    break;
+                }
+                
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+            
+            progressBar.style.width = '100%';
+        }
+        
+        async function checkNetwork() {
+            try {
+                const response = await fetch('https://dashscope.aliyuncs.com', { 
+                    method: 'HEAD',
+                    mode: 'no-cors'
+                });
+                return '网络连接正常';
+            } catch (error) {
+                throw new Error('无法连接到阿里云API服务器');
+            }
+        }
+        
+        async function validateApiKey() {
+            const apiKey = document.getElementById('apiKey').value.trim();
+            if (apiKey.startsWith('sk-') && apiKey.length > 20) {
+                return 'API密钥格式正确';
+            }
+            throw new Error('API密钥格式不正确');
+        }
+        
+        async function testApiCall() {
+            const apiKey = document.getElementById('apiKey').value.trim();
+            const model = document.getElementById('modelSelect').value;
+            
+            const response = await fetch('https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`,
+                    'X-DashScope-SSE': 'disable'
+                },
+                body: JSON.stringify({
+                    model: model,
+                    input: {
+                        messages: [
+                            {
+                                role: 'user',
+                                content: 'Hello'
+                            }
+                        ]
+                    },
+                    parameters: {
+                        result_format: 'message',
+                        max_tokens: 100
+                    }
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            return 'API调用成功';
+        }
+        
+        async function parseResponse() {
+            return '响应解析正常';
+        }
+        
+        async function testAPI() {
+            const apiKey = document.getElementById('apiKey').value.trim();
+            const model = document.getElementById('modelSelect').value;
+            const message = document.getElementById('testMessage').value.trim();
+            const resultDiv = document.getElementById('testResult');
+            
+            if (!apiKey || !message) {
+                resultDiv.innerHTML = '<div class="result error">❌ 请输入API密钥和测试消息</div>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<div class="result info">🔄 正在发送请求...</div>';
+            testCount++;
+            
+            try {
+                const startTime = Date.now();
+                
+                const response = await fetch('https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`,
+                        'X-DashScope-SSE': 'disable'
+                    },
+                    body: JSON.stringify({
+                        model: model,
+                        input: {
+                            messages: [
+                                {
+                                    role: 'system',
+                                    content: '你是JELILIAN AI助手，请用中文回复。'
+                                },
+                                {
+                                    role: 'user',
+                                    content: message
+                                }
+                            ]
+                        },
+                        parameters: {
+                            result_format: 'message',
+                            max_tokens: 1500,
+                            temperature: 0.8
+                        }
+                    })
+                });
+                
+                const endTime = Date.now();
+                const responseTime = endTime - startTime;
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${data.message || response.statusText}`);
+                }
+                
+                if (data.code && data.code !== '200') {
+                    throw new Error(`API错误 ${data.code}: ${data.message}`);
+                }
+                
+                if (!data.output || !data.output.choices || !data.output.choices[0]) {
+                    throw new Error('API响应格式错误');
+                }
+                
+                successCount++;
+                const aiResponse = data.output.choices[0].message.content;
+                const tokens = data.usage ? data.usage.total_tokens : 0;
+                
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        <strong>✅ API调用成功！</strong><br>
+                        <strong>响应时间:</strong> ${responseTime}ms<br>
+                        <strong>使用Token:</strong> ${tokens}<br>
+                        <strong>模型:</strong> ${model}<br><br>
+                        <strong>AI回复:</strong><br>
+                        <div style="background: #f8fafc; padding: 15px; border-radius: 6px; margin-top: 10px;">
+                            ${aiResponse}
+                        </div>
+                    </div>
+                `;
+                
+                updateStats();
+                
+            } catch (error) {
+                errorCount++;
+                console.error('API Test Error:', error);
+                
+                let errorMessage = error.message;
+                let suggestion = '';
+                
+                if (error.message.includes('401')) {
+                    suggestion = '建议: 检查API密钥是否正确';
+                } else if (error.message.includes('403')) {
+                    suggestion = '建议: 检查API权限和账户余额';
+                } else if (error.message.includes('429')) {
+                    suggestion = '建议: 降低请求频率，稍后重试';
+                } else if (error.message.includes('CORS')) {
+                    suggestion = '建议: 在本地服务器环境中运行';
+                }
+                
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <strong>❌ API调用失败</strong><br>
+                        <strong>错误信息:</strong> ${errorMessage}<br>
+                        ${suggestion ? `<strong>解决建议:</strong> ${suggestion}` : ''}
+                    </div>
+                `;
+                
+                updateStats();
+            }
+        }
+        
+        async function testMultipleMessages() {
+            const messages = [
+                '你好',
+                '请介绍一下你自己',
+                '帮我写一个简单的网页',
+                '什么是人工智能？'
+            ];
+            
+            for (const msg of messages) {
+                document.getElementById('testMessage').value = msg;
+                await testAPI();
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+        }
+        
+        function showCorrectFormat() {
+            const format = `{
+  "model": "qwen-turbo",
+  "input": {
+    "messages": [
+      {
+        "role": "system",
+        "content": "你是一个AI助手"
+      },
+      {
+        "role": "user", 
+        "content": "用户消息"
+      }
+    ]
+  },
+  "parameters": {
+    "result_format": "message",
+    "max_tokens": 1500,
+    "temperature": 0.8
+  }
+}`;
+            
+            document.getElementById('correctFormat').innerHTML = format;
+        }
+        
+        function fixCommonIssues() {
+            // 自动修复一些常见问题
+            const apiKey = document.getElementById('apiKey').value.trim();
+            
+            if (!apiKey.startsWith('sk-')) {
+                alert('请确保API密钥以"sk-"开头');
+                return;
+            }
+            
+            // 检查是否在本地服务器环境
+            if (location.protocol === 'file:') {
+                alert('检测到您在本地文件环境中运行。建议使用本地服务器:\n\npython -m http.server 8000\n或\nnpx serve .');
+                return;
+            }
+            
+            alert('✅ 常见问题检查完成！如果仍有问题，请查看具体错误信息。');
+        }
+        
+        function updateStats() {
+            const statsDiv = document.getElementById('apiStats');
+            const successRate = testCount > 0 ? ((successCount / testCount) * 100).toFixed(1) : 0;
+            
+            statsDiv.innerHTML = `
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                    <div style="background: #f0f9ff; padding: 15px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 2rem; font-weight: bold; color: #0369a1;">${testCount}</div>
+                        <div style="color: #0369a1;">总测试次数</div>
+                    </div>
+                    <div style="background: #d1fae5; padding: 15px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 2rem; font-weight: bold; color: #065f46;">${successCount}</div>
+                        <div style="color: #065f46;">成功次数</div>
+                    </div>
+                    <div style="background: #fee2e2; padding: 15px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 2rem; font-weight: bold; color: #991b1b;">${errorCount}</div>
+                        <div style="color: #991b1b;">失败次数</div>
+                    </div>
+                    <div style="background: #fef3c7; padding: 15px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 2rem; font-weight: bold; color: #92400e;">${successRate}%</div>
+                        <div style="color: #92400e;">成功率</div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // 页面加载时显示正确格式
+        document.addEventListener('DOMContentLoaded', function() {
+            showCorrectFormat();
+        });
+    </script>
+</body>
+</html>

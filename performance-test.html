@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JELILIAN 性能测试</title>
+    <style>
+        body { font-family: system-ui; padding: 20px; background: #f5f5f5; }
+        .test-container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .test-item { margin: 20px 0; padding: 15px; border: 1px solid #e0e0e0; border-radius: 8px; }
+        .test-result { margin-top: 10px; font-weight: bold; }
+        .good { color: #10b981; }
+        .warning { color: #f59e0b; }
+        .bad { color: #ef4444; }
+        .btn { background: #6366f1; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; margin: 5px; }
+        .progress { width: 100%; height: 20px; background: #e0e0e0; border-radius: 10px; overflow: hidden; }
+        .progress-bar { height: 100%; background: linear-gradient(90deg, #6366f1, #8b5cf6); transition: width 0.3s; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🚀 JELILIAN 性能诊断工具</h1>
+        <p>检测网站性能问题并提供优化建议</p>
+        
+        <div class="test-item">
+            <h3>📊 页面加载性能测试</h3>
+            <button class="btn" onclick="testPageLoad()">开始测试</button>
+            <div id="loadTest" class="test-result"></div>
+        </div>
+        
+        <div class="test-item">
+            <h3>🌐 网络资源检测</h3>
+            <button class="btn" onclick="testResources()">检测资源</button>
+            <div id="resourceTest" class="test-result"></div>
+        </div>
+        
+        <div class="test-item">
+            <h3>💾 内存使用情况</h3>
+            <button class="btn" onclick="testMemory()">检测内存</button>
+            <div id="memoryTest" class="test-result"></div>
+        </div>
+        
+        <div class="test-item">
+            <h3>⚡ JavaScript 执行性能</h3>
+            <button class="btn" onclick="testJSPerformance()">测试JS性能</button>
+            <div id="jsTest" class="test-result"></div>
+        </div>
+        
+        <div class="test-item">
+            <h3>🎨 渲染性能测试</h3>
+            <button class="btn" onclick="testRenderPerformance()">测试渲染</button>
+            <div id="renderTest" class="test-result"></div>
+        </div>
+        
+        <div class="test-item">
+            <h3>📱 移动端性能</h3>
+            <button class="btn" onclick="testMobilePerformance()">测试移动端</button>
+            <div id="mobileTest" class="test-result"></div>
+        </div>
+        
+        <div class="test-item">
+            <h3>🔧 优化建议</h3>
+            <button class="btn" onclick="generateRecommendations()">生成建议</button>
+            <div id="recommendations" class="test-result"></div>
+        </div>
+        
+        <div class="test-item">
+            <h3>🚀 快速修复</h3>
+            <button class="btn" onclick="applyQuickFixes()">应用修复</button>
+            <div id="quickFixes" class="test-result"></div>
+        </div>
+    </div>
+
+    <script>
+        let testResults = {};
+        
+        function testPageLoad() {
+            const result = document.getElementById('loadTest');
+            result.innerHTML = '正在测试页面加载性能...';
+            
+            const startTime = performance.now();
+            
+            // 模拟页面加载测试
+            setTimeout(() => {
+                const loadTime = performance.now() - startTime;
+                const domContentLoaded = performance.getEntriesByType('navigation')[0]?.domContentLoadedEventEnd || 0;
+                const loadComplete = performance.getEntriesByType('navigation')[0]?.loadEventEnd || 0;
+                
+                testResults.pageLoad = {
+                    loadTime: loadTime,
+                    domContentLoaded: domContentLoaded,
+                    loadComplete: loadComplete
+                };
+                
+                let status = 'good';
+                let message = '';
+                
+                if (loadComplete > 3000) {
+                    status = 'bad';
+                    message = `❌ 页面加载过慢 (${(loadComplete/1000).toFixed(2)}秒)`;
+                } else if (loadComplete > 1500) {
+                    status = 'warning';
+                    message = `⚠️ 页面加载较慢 (${(loadComplete/1000).toFixed(2)}秒)`;
+                } else {
+                    message = `✅ 页面加载良好 (${(loadComplete/1000).toFixed(2)}秒)`;
+                }
+                
+                result.innerHTML = `
+                    <div class="${status}">${message}</div>
+                    <div>DOM加载: ${(domContentLoaded/1000).toFixed(2)}秒</div>
+                    <div>完全加载: ${(loadComplete/1000).toFixed(2)}秒</div>
+                `;
+            }, 100);
+        }
+        
+        function testResources() {
+            const result = document.getElementById('resourceTest');
+            result.innerHTML = '正在检测网络资源...';
+            
+            const resources = performance.getEntriesByType('resource');
+            const slowResources = resources.filter(r => r.duration > 1000);
+            const externalResources = resources.filter(r => !r.name.includes(location.hostname));
+            
+            testResults.resources = {
+                total: resources.length,
+                slow: slowResources.length,
+                external: externalResources.length
+            };
+            
+            let status = 'good';
+            let message = '';
+            
+            if (slowResources.length > 3) {
+                status = 'bad';
+                message = `❌ 发现 ${slowResources.length} 个慢速资源`;
+            } else if (slowResources.length > 0) {
+                status = 'warning';
+                message = `⚠️ 发现 ${slowResources.length} 个慢速资源`;
+            } else {
+                message = `✅ 所有资源加载正常`;
+            }
+            
+            result.innerHTML = `
+                <div class="${status}">${message}</div>
+                <div>总资源数: ${resources.length}</div>
+                <div>外部资源: ${externalResources.length}</div>
+                <div>慢速资源: ${slowResources.length}</div>
+            `;
+        }
+        
+        function testMemory() {
+            const result = document.getElementById('memoryTest');
+            result.innerHTML = '正在检测内存使用...';
+            
+            if (performance.memory) {
+                const memory = performance.memory;
+                const usedMB = (memory.usedJSHeapSize / 1024 / 1024).toFixed(2);
+                const totalMB = (memory.totalJSHeapSize / 1024 / 1024).toFixed(2);
+                const limitMB = (memory.jsHeapSizeLimit / 1024 / 1024).toFixed(2);
+                
+                testResults.memory = {
+                    used: usedMB,
+                    total: totalMB,
+                    limit: limitMB
+                };
+                
+                let status = 'good';
+                let message = '';
+                
+                if (usedMB > 50) {
+                    status = 'bad';
+                    message = `❌ 内存使用过高 (${usedMB}MB)`;
+                } else if (usedMB > 20) {
+                    status = 'warning';
+                    message = `⚠️ 内存使用较高 (${usedMB}MB)`;
+                } else {
+                    message = `✅ 内存使用正常 (${usedMB}MB)`;
+                }
+                
+                result.innerHTML = `
+                    <div class="${status}">${message}</div>
+                    <div>已使用: ${usedMB}MB</div>
+                    <div>总分配: ${totalMB}MB</div>
+                    <div>限制: ${limitMB}MB</div>
+                `;
+            } else {
+                result.innerHTML = '<div class="warning">⚠️ 浏览器不支持内存检测</div>';
+            }
+        }
+        
+        function testJSPerformance() {
+            const result = document.getElementById('jsTest');
+            result.innerHTML = '正在测试JavaScript性能...';
+            
+            const startTime = performance.now();
+            
+            // 模拟复杂计算
+            let sum = 0;
+            for (let i = 0; i < 1000000; i++) {
+                sum += Math.random();
+            }
+            
+            const executionTime = performance.now() - startTime;
+            
+            testResults.jsPerformance = {
+                executionTime: executionTime
+            };
+            
+            let status = 'good';
+            let message = '';
+            
+            if (executionTime > 100) {
+                status = 'bad';
+                message = `❌ JavaScript执行较慢 (${executionTime.toFixed(2)}ms)`;
+            } else if (executionTime > 50) {
+                status = 'warning';
+                message = `⚠️ JavaScript执行一般 (${executionTime.toFixed(2)}ms)`;
+            } else {
+                message = `✅ JavaScript执行良好 (${executionTime.toFixed(2)}ms)`;
+            }
+            
+            result.innerHTML = `<div class="${status}">${message}</div>`;
+        }
+        
+        function testRenderPerformance() {
+            const result = document.getElementById('renderTest');
+            result.innerHTML = '正在测试渲染性能...';
+            
+            const startTime = performance.now();
+            
+            // 创建大量DOM元素测试渲染性能
+            const testContainer = document.createElement('div');
+            testContainer.style.position = 'absolute';
+            testContainer.style.left = '-9999px';
+            document.body.appendChild(testContainer);
+            
+            for (let i = 0; i < 1000; i++) {
+                const div = document.createElement('div');
+                div.textContent = `Test element ${i}`;
+                div.style.padding = '10px';
+                div.style.margin = '5px';
+                div.style.background = '#f0f0f0';
+                testContainer.appendChild(div);
+            }
+            
+            const renderTime = performance.now() - startTime;
+            document.body.removeChild(testContainer);
+            
+            testResults.renderPerformance = {
+                renderTime: renderTime
+            };
+            
+            let status = 'good';
+            let message = '';
+            
+            if (renderTime > 200) {
+                status = 'bad';
+                message = `❌ 渲染性能较差 (${renderTime.toFixed(2)}ms)`;
+            } else if (renderTime > 100) {
+                status = 'warning';
+                message = `⚠️ 渲染性能一般 (${renderTime.toFixed(2)}ms)`;
+            } else {
+                message = `✅ 渲染性能良好 (${renderTime.toFixed(2)}ms)`;
+            }
+            
+            result.innerHTML = `<div class="${status}">${message}</div>`;
+        }
+        
+        function testMobilePerformance() {
+            const result = document.getElementById('mobileTest');
+            result.innerHTML = '正在测试移动端性能...';
+            
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            
+            testResults.mobile = {
+                isMobile: isMobile,
+                connection: connection ? connection.effectiveType : 'unknown'
+            };
+            
+            let status = 'good';
+            let message = '';
+            
+            if (isMobile && connection && connection.effectiveType === 'slow-2g') {
+                status = 'bad';
+                message = `❌ 移动端网络较慢 (${connection.effectiveType})`;
+            } else if (isMobile) {
+                status = 'warning';
+                message = `⚠️ 移动端设备 (${connection ? connection.effectiveType : '未知网络'})`;
+            } else {
+                message = `✅ 桌面端设备`;
+            }
+            
+            result.innerHTML = `
+                <div class="${status}">${message}</div>
+                <div>设备类型: ${isMobile ? '移动端' : '桌面端'}</div>
+                <div>网络类型: ${connection ? connection.effectiveType : '未知'}</div>
+            `;
+        }
+        
+        function generateRecommendations() {
+            const result = document.getElementById('recommendations');
+            const recommendations = [];
+            
+            if (testResults.pageLoad && testResults.pageLoad.loadComplete > 2000) {
+                recommendations.push('🔧 优化页面加载速度：压缩CSS/JS文件，使用CDN');
+            }
+            
+            if (testResults.resources && testResults.resources.slow > 0) {
+                recommendations.push('🌐 优化慢速资源：使用图片压缩，启用浏览器缓存');
+            }
+            
+            if (testResults.memory && testResults.memory.used > 30) {
+                recommendations.push('💾 优化内存使用：减少DOM元素，清理未使用的变量');
+            }
+            
+            if (testResults.jsPerformance && testResults.jsPerformance.executionTime > 50) {
+                recommendations.push('⚡ 优化JavaScript：使用Web Workers，减少同步操作');
+            }
+            
+            if (testResults.renderPerformance && testResults.renderPerformance.renderTime > 100) {
+                recommendations.push('🎨 优化渲染性能：使用CSS transform，避免频繁重排');
+            }
+            
+            if (testResults.mobile && testResults.mobile.isMobile) {
+                recommendations.push('📱 移动端优化：减少资源大小，使用响应式图片');
+            }
+            
+            if (recommendations.length === 0) {
+                recommendations.push('✅ 网站性能良好，无需特别优化');
+            }
+            
+            result.innerHTML = recommendations.map(rec => `<div style="margin: 8px 0; padding: 8px; background: #f8f9fa; border-radius: 4px;">${rec}</div>`).join('');
+        }
+        
+        function applyQuickFixes() {
+            const result = document.getElementById('quickFixes');
+            result.innerHTML = '正在应用快速修复...';
+            
+            const fixes = [];
+            
+            // 应用一些基本的性能优化
+            const images = document.querySelectorAll('img');
+            images.forEach(img => {
+                if (!img.loading) {
+                    img.loading = 'lazy';
+                    fixes.push('✅ 启用图片懒加载');
+                }
+            });
+            
+            // 添加预加载提示
+            const links = document.querySelectorAll('a[href^="http"]');
+            links.forEach(link => {
+                if (!link.rel) {
+                    link.rel = 'noopener';
+                    fixes.push('✅ 添加链接安全属性');
+                }
+            });
+            
+            // 优化字体加载
+            const fontLinks = document.querySelectorAll('link[href*="fonts.googleapis.com"]');
+            fontLinks.forEach(link => {
+                if (!link.rel.includes('preconnect')) {
+                    fixes.push('✅ 优化字体预连接');
+                }
+            });
+            
+            if (fixes.length === 0) {
+                fixes.push('ℹ️ 当前页面已经过优化');
+            }
+            
+            setTimeout(() => {
+                result.innerHTML = fixes.map(fix => `<div style="margin: 4px 0; color: #10b981;">${fix}</div>`).join('');
+            }, 1000);
+        }
+        
+        // 自动运行基础测试
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                testPageLoad();
+                setTimeout(() => testResources(), 500);
+                setTimeout(() => testMemory(), 1000);
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

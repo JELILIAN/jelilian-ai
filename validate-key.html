@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API密钥验证工具</title>
+    <style>
+        body { font-family: system-ui; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { color: #6366f1; margin-bottom: 10px; }
+        .input-group { margin: 15px 0; }
+        .input-group label { display: block; margin-bottom: 5px; font-weight: 600; color: #374151; }
+        .input-group input, textarea { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-family: monospace; }
+        .btn { background: #6366f1; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-weight: 600; margin: 5px; }
+        .btn:hover { background: #4f46e5; }
+        .result { margin-top: 20px; padding: 15px; border-radius: 6px; }
+        .success { background: #d1fae5; color: #065f46; border: 1px solid #10b981; }
+        .error { background: #fee2e2; color: #991b1b; border: 1px solid #ef4444; }
+        .warning { background: #fef3c7; color: #92400e; border: 1px solid #f59e0b; }
+        .info { background: #dbeafe; color: #1e40af; border: 1px solid #3b82f6; }
+        .code { background: #f3f4f6; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 12px; white-space: pre-wrap; }
+        .check-item { margin: 10px 0; padding: 10px; border-radius: 6px; }
+        .check-pass { background: #d1fae5; border-left: 4px solid #10b981; }
+        .check-fail { background: #fee2e2; border-left: 4px solid #ef4444; }
+        .check-warn { background: #fef3c7; border-left: 4px solid #f59e0b; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔑 API密钥验证工具</h1>
+            <p>检查和修复API密钥格式问题</p>
+        </div>
+        
+        <div class="input-group">
+            <label>输入API密钥:</label>
+            <textarea id="apiKey" rows="3" placeholder="粘贴您的API密钥..."></textarea>
+        </div>
+        
+        <button class="btn" onclick="validateKey()">验证密钥</button>
+        <button class="btn" onclick="cleanKey()">清理密钥</button>
+        <button class="btn" onclick="testKey()">测试连接</button>
+        
+        <div id="result"></div>
+        
+        <div class="result info">
+            <strong>💡 常见问题:</strong><br><br>
+            <strong>1. 非法字符错误</strong><br>
+            • 密钥中包含空格、换行符或特殊字符<br>
+            • 解决方案: 使用"清理密钥"功能<br><br>
+            
+            <strong>2. 格式不正确</strong><br>
+            • 阿里千问密钥应该以"sk-"开头<br>
+            • 长度通常在50-100个字符之间<br><br>
+            
+            <strong>3. 复制粘贴问题</strong><br>
+            • 可能复制了多余的空格或换行<br>
+            • 建议重新复制完整的密钥
+        </div>
+    </div>
+
+    <script>
+        function validateKey() {
+            const apiKey = document.getElementById('apiKey').value;
+            const resultDiv = document.getElementById('result');
+            
+            if (!apiKey.trim()) {
+                resultDiv.innerHTML = '<div class="result error">❌ 请输入API密钥</div>';
+                return;
+            }
+            
+            const checks = [];
+            let isValid = true;
+            
+            // 检查1: 基本格式
+            if (apiKey.startsWith('sk-')) {
+                checks.push({
+                    name: '格式检查',
+                    status: 'pass',
+                    message: '✅ 密钥以"sk-"开头，格式正确'
+                });
+            } else {
+                checks.push({
+                    name: '格式检查',
+                    status: 'fail',
+                    message: '❌ 密钥应该以"sk-"开头'
+                });
+                isValid = false;
+            }
+            
+            // 检查2: 长度
+            const length = apiKey.trim().length;
+            if (length >= 20 && length <= 200) {
+                checks.push({
+                    name: '长度检查',
+                    status: 'pass',
+                    message: `✅ 密钥长度正常 (${length}个字符)`
+                });
+            } else {
+                checks.push({
+                    name: '长度检查',
+                    status: 'fail',
+                    message: `❌ 密钥长度异常 (${length}个字符)，正常范围20-200`
+                });
+                isValid = false;
+            }
+            
+            // 检查3: 非法字符
+            const invalidChars = apiKey.match(/[^a-zA-Z0-9\-_]/g);
+            if (!invalidChars) {
+                checks.push({
+                    name: '字符检查',
+                    status: 'pass',
+                    message: '✅ 密钥不包含非法字符'
+                });
+            } else {
+                const uniqueInvalidChars = [...new Set(invalidChars)];
+                checks.push({
+                    name: '字符检查',
+                    status: 'fail',
+                    message: `❌ 发现非法字符: ${uniqueInvalidChars.map(c => `"${c}"`).join(', ')}`
+                });
+                isValid = false;
+            }
+            
+            // 检查4: 空格和换行
+            const hasWhitespace = /\s/.test(apiKey);
+            if (!hasWhitespace) {
+                checks.push({
+                    name: '空格检查',
+                    status: 'pass',
+                    message: '✅ 密钥不包含空格或换行符'
+                });
+            } else {
+                checks.push({
+                    name: '空格检查',
+                    status: 'warn',
+                    message: '⚠️ 密钥包含空格或换行符，建议清理'
+                });
+            }
+            
+            // 生成结果
+            let resultHtml = `<div class="result ${isValid ? 'success' : 'error'}">
+                <strong>${isValid ? '✅ 密钥验证通过' : '❌ 密钥验证失败'}</strong><br><br>
+            `;
+            
+            checks.forEach(check => {
+                const className = check.status === 'pass' ? 'check-pass' : 
+                                check.status === 'fail' ? 'check-fail' : 'check-warn';
+                resultHtml += `<div class="check-item ${className}">
+                    <strong>${check.name}:</strong> ${check.message}
+                </div>`;
+            });
+            
+            if (!isValid) {
+                resultHtml += `<br><strong>🔧 建议:</strong><br>
+                1. 点击"清理密钥"按钮自动修复<br>
+                2. 重新从控制台复制完整的API密钥<br>
+                3. 确保密钥没有被截断或修改`;
+            }
+            
+            resultHtml += '</div>';
+            resultDiv.innerHTML = resultHtml;
+        }
+        
+        function cleanKey() {
+            const apiKeyInput = document.getElementById('apiKey');
+            const originalKey = apiKeyInput.value;
+            
+            if (!originalKey.trim()) {
+                document.getElementById('result').innerHTML = '<div class="result error">❌ 请先输入API密钥</div>';
+                return;
+            }
+            
+            // 清理步骤
+            let cleanedKey = originalKey;
+            
+            // 1. 移除前后空格和换行符
+            cleanedKey = cleanedKey.trim().replace(/\s+/g, '');
+            
+            // 2. 移除其他非法字符（只保留字母、数字、连字符、下划线）
+            cleanedKey = cleanedKey.replace(/[^a-zA-Z0-9\-_]/g, '');
+            
+            // 更新输入框
+            apiKeyInput.value = cleanedKey;
+            
+            // 显示清理结果
+            const changes = [];
+            if (originalKey !== cleanedKey) {
+                if (originalKey.length !== cleanedKey.length) {
+                    changes.push(`长度从 ${originalKey.length} 变为 ${cleanedKey.length}`);
+                }
+                if (/\s/.test(originalKey)) {
+                    changes.push('移除了空格和换行符');
+                }
+                if (/[^a-zA-Z0-9\-_\s]/.test(originalKey)) {
+                    changes.push('移除了特殊字符');
+                }
+                
+                document.getElementById('result').innerHTML = `
+                    <div class="result success">
+                        ✅ 密钥清理完成<br><br>
+                        <strong>清理内容:</strong><br>
+                        • ${changes.join('<br>• ')}<br><br>
+                        <strong>清理后的密钥:</strong><br>
+                        <div class="code">${cleanedKey}</div>
+                    </div>
+                `;
+            } else {
+                document.getElementById('result').innerHTML = '<div class="result info">ℹ️ 密钥已经是干净的，无需清理</div>';
+            }
+        }
+        
+        async function testKey() {
+            const apiKey = document.getElementById('apiKey').value.trim();
+            const resultDiv = document.getElementById('result');
+            
+            if (!apiKey) {
+                resultDiv.innerHTML = '<div class="result error">❌ 请输入API密钥</div>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<div class="result info">🔄 正在测试API连接...</div>';
+            
+            try {
+                const response = await fetch('http://localhost:3000/api/test', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        provider: 'qwen',
+                        apiKey: apiKey
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="result success">
+                            ✅ API连接测试成功！<br><br>
+                            <strong>服务商:</strong> ${data.provider}<br>
+                            <strong>响应时间:</strong> ${data.responseTime}ms<br>
+                            <strong>密钥状态:</strong> 有效<br>
+                            <strong>测试响应:</strong><br>
+                            <div class="code">${data.testResponse}</div>
+                        </div>
+                    `;
+                } else {
+                    let errorHtml = `
+                        <div class="result error">
+                            ❌ API连接测试失败<br><br>
+                            <strong>错误信息:</strong> ${data.error}<br>
+                    `;
+                    
+                    if (data.debug) {
+                        errorHtml += `<br><strong>调试信息:</strong><br>`;
+                        Object.entries(data.debug).forEach(([key, value]) => {
+                            errorHtml += `• ${key}: ${value}<br>`;
+                        });
+                    }
+                    
+                    errorHtml += '</div>';
+                    resultDiv.innerHTML = errorHtml;
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        ❌ 测试请求失败: ${error.message}<br><br>
+                        <strong>可能原因:</strong><br>
+                        • 后端服务器未启动<br>
+                        • 网络连接问题<br>
+                        • 服务器地址不正确
+                    </div>
+                `;
+            }
+        }
+        
+        // 自动检测粘贴的内容
+        document.getElementById('apiKey').addEventListener('paste', function() {
+            setTimeout(() => {
+                validateKey();
+            }, 100);
+        });
+    </script>
+</body>
+</html>

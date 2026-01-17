@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JELILIAN - AI配置</title>
+    <style>
+        body { font-family: system-ui; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { color: #6366f1; margin-bottom: 10px; }
+        .config-section { margin: 30px 0; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; }
+        .config-section h3 { color: #1f2937; margin-bottom: 15px; }
+        .provider-option { display: flex; align-items: center; margin: 15px 0; padding: 15px; border: 2px solid #e5e7eb; border-radius: 8px; cursor: pointer; transition: all 0.3s; }
+        .provider-option:hover { border-color: #6366f1; background: #f8fafc; }
+        .provider-option.selected { border-color: #6366f1; background: #f0f9ff; }
+        .provider-option input[type="radio"] { margin-right: 12px; }
+        .provider-info { flex: 1; }
+        .provider-name { font-weight: 600; color: #1f2937; margin-bottom: 4px; }
+        .provider-desc { color: #6b7280; font-size: 14px; }
+        .provider-status { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+        .status-available { background: #d1fae5; color: #065f46; }
+        .status-need-key { background: #fef3c7; color: #92400e; }
+        .api-key-input { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; margin-top: 10px; font-family: monospace; }
+        .btn { background: #6366f1; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-weight: 600; margin: 5px; }
+        .btn:hover { background: #4f46e5; }
+        .btn-secondary { background: #6b7280; }
+        .btn-secondary:hover { background: #4b5563; }
+        .test-area { background: #f8fafc; padding: 20px; border-radius: 8px; margin-top: 20px; }
+        .test-result { margin-top: 15px; padding: 15px; border-radius: 6px; }
+        .success { background: #d1fae5; color: #065f46; border: 1px solid #10b981; }
+        .error { background: #fee2e2; color: #991b1b; border: 1px solid #ef4444; }
+        .comparison-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .comparison-table th, .comparison-table td { padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+        .comparison-table th { background: #f9fafb; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 JELILIAN AI配置</h1>
+            <p>选择和配置您的AI服务商</p>
+        </div>
+        
+        <div class="config-section">
+            <h3>🎯 选择AI服务商</h3>
+            
+            <div class="provider-option" onclick="selectProvider('mock')">
+                <input type="radio" name="provider" value="mock" checked>
+                <div class="provider-info">
+                    <div class="provider-name">模拟AI (当前)</div>
+                    <div class="provider-desc">本地模拟响应，无需API密钥，适合演示和测试</div>
+                </div>
+                <div class="provider-status status-available">可用</div>
+            </div>
+            
+            <div class="provider-option" onclick="selectProvider('openai')">
+                <input type="radio" name="provider" value="openai">
+                <div class="provider-info">
+                    <div class="provider-name">OpenAI GPT</div>
+                    <div class="provider-desc">GPT-4, GPT-3.5 等模型，强大的语言理解和生成能力</div>
+                </div>
+                <div class="provider-status status-need-key">需要API密钥</div>
+            </div>
+            
+            <div class="provider-option" onclick="selectProvider('qwen')">
+                <input type="radio" name="provider" value="qwen">
+                <div class="provider-info">
+                    <div class="provider-name">阿里千问</div>
+                    <div class="provider-desc">阿里云大模型，中文理解优秀，价格相对便宜</div>
+                </div>
+                <div class="provider-status status-need-key">需要API密钥</div>
+            </div>
+            
+            <div class="provider-option" onclick="selectProvider('claude')">
+                <input type="radio" name="provider" value="claude">
+                <div class="provider-info">
+                    <div class="provider-name">Anthropic Claude</div>
+                    <div class="provider-desc">Claude-3 系列，优秀的推理能力和安全性</div>
+                </div>
+                <div class="provider-status status-need-key">需要API密钥</div>
+            </div>
+        </div>
+        
+        <div class="config-section" id="apiKeySection" style="display: none;">
+            <h3>🔑 API密钥配置</h3>
+            <p>请输入您选择的AI服务商的API密钥：</p>
+            <input type="password" id="apiKeyInput" class="api-key-input" placeholder="输入API密钥...">
+            <div style="margin-top: 10px;">
+                <button class="btn" onclick="saveApiKey()">保存密钥</button>
+                <button class="btn btn-secondary" onclick="testConnection()">测试连接</button>
+            </div>
+            <div id="keyTestResult"></div>
+        </div>
+        
+        <div class="config-section">
+            <h3>🧪 AI对话测试</h3>
+            <div class="test-area">
+                <input type="text" id="testMessage" placeholder="输入测试消息..." style="width: 70%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;">
+                <button class="btn" onclick="testAI()" style="width: 25%;">测试AI</button>
+                <div id="testResult"></div>
+            </div>
+        </div>
+        
+        <div class="config-section">
+            <h3>📊 AI服务商对比</h3>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>服务商</th>
+                        <th>优势</th>
+                        <th>价格</th>
+                        <th>中文支持</th>
+                        <th>推荐场景</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>模拟AI</strong></td>
+                        <td>免费、快速、无限制</td>
+                        <td>免费</td>
+                        <td>⭐⭐⭐</td>
+                        <td>演示、测试</td>
+                    </tr>
+                    <tr>
+                        <td><strong>OpenAI GPT</strong></td>
+                        <td>功能强大、生态完善</td>
+                        <td>较高</td>
+                        <td>⭐⭐⭐⭐</td>
+                        <td>复杂任务、创意写作</td>
+                    </tr>
+                    <tr>
+                        <td><strong>阿里千问</strong></td>
+                        <td>中文优秀、价格便宜</td>
+                        <td>较低</td>
+                        <td>⭐⭐⭐⭐⭐</td>
+                        <td>中文内容、成本敏感</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Claude</strong></td>
+                        <td>推理能力强、安全性高</td>
+                        <td>中等</td>
+                        <td>⭐⭐⭐⭐</td>
+                        <td>分析任务、代码生成</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px;">
+            <button class="btn" onclick="applyConfig()">应用配置</button>
+            <button class="btn btn-secondary" onclick="resetConfig()">重置配置</button>
+        </div>
+    </div>
+
+    <script src="real-ai-integration.js"></script>
+    <script>
+        let currentProvider = 'mock';
+        let aiIntegration = null;
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSavedConfig();
+        });
+        
+        function selectProvider(provider) {
+            currentProvider = provider;
+            document.querySelector(`input[value="${provider}"]`).checked = true;
+            
+            // 显示或隐藏API密钥配置
+            const apiKeySection = document.getElementById('apiKeySection');
+            if (provider === 'mock') {
+                apiKeySection.style.display = 'none';
+            } else {
+                apiKeySection.style.display = 'block';
+                document.getElementById('apiKeyInput').placeholder = `输入${getProviderName(provider)}的API密钥...`;
+            }
+        }
+        
+        function getProviderName(provider) {
+            const names = {
+                'openai': 'OpenAI',
+                'qwen': '阿里千问',
+                'claude': 'Claude',
+                'mock': '模拟AI'
+            };
+            return names[provider] || provider;
+        }
+        
+        function saveApiKey() {
+            const apiKey = document.getElementById('apiKeyInput').value.trim();
+            if (!apiKey) {
+                alert('请输入API密钥');
+                return;
+            }
+            
+            // 保存到localStorage
+            localStorage.setItem(`jelilian_${currentProvider}_key`, apiKey);
+            
+            // 初始化AI集成
+            if (!aiIntegration) {
+                aiIntegration = new RealAIIntegration();
+            }
+            aiIntegration.setApiKey(currentProvider, apiKey);
+            
+            alert('API密钥已保存');
+        }
+        
+        async function testConnection() {
+            const apiKey = document.getElementById('apiKeyInput').value.trim();
+            if (!apiKey) {
+                alert('请先输入API密钥');
+                return;
+            }
+            
+            const resultDiv = document.getElementById('keyTestResult');
+            resultDiv.innerHTML = '<div style="color: #6b7280;">正在测试连接...</div>';
+            
+            try {
+                if (!aiIntegration) {
+                    aiIntegration = new RealAIIntegration();
+                }
+                aiIntegration.setApiKey(currentProvider, apiKey);
+                
+                // 针对不同服务商使用不同的测试消息
+                let testMessage = 'Hello';
+                if (currentProvider === 'qwen') {
+                    testMessage = '你好，请简单介绍一下你自己';
+                }
+                
+                const response = await aiIntegration.chat(testMessage, { 
+                    provider: currentProvider,
+                    maxTokens: 100
+                });
+                
+                if (response.success) {
+                    resultDiv.innerHTML = `
+                        <div class="test-result success">
+                            ✅ 连接成功！<br>
+                            <strong>模型:</strong> ${response.model}<br>
+                            <strong>服务商:</strong> ${getProviderName(currentProvider)}<br>
+                            ${response.tokens ? `<strong>使用Token:</strong> ${response.tokens}` : ''}
+                        </div>
+                    `;
+                } else {
+                    let errorMsg = response.error;
+                    let suggestion = '';
+                    
+                    // 针对阿里千问的特殊错误处理
+                    if (currentProvider === 'qwen') {
+                        if (response.error.includes('401')) {
+                            suggestion = '<br><strong>建议:</strong> 检查API密钥是否正确，确保以"sk-"开头';
+                        } else if (response.error.includes('403')) {
+                            suggestion = '<br><strong>建议:</strong> 检查账户余额和API权限';
+                        } else if (response.error.includes('CORS')) {
+                            suggestion = '<br><strong>建议:</strong> 请在本地服务器环境中运行 (python -m http.server 8000)';
+                        }
+                    }
+                    
+                    resultDiv.innerHTML = `
+                        <div class="test-result error">
+                            ❌ 连接失败：${errorMsg}${suggestion}
+                            <br><br>
+                            <button onclick="openDebugTool()" style="background:#f59e0b;color:white;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;">
+                                🔧 打开调试工具
+                            </button>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="test-result error">
+                        ❌ 测试失败：${error.message}
+                        <br><br>
+                        <button onclick="openDebugTool()" style="background:#f59e0b;color:white;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;">
+                            🔧 打开调试工具
+                        </button>
+                    </div>
+                `;
+            }
+        }
+        
+        function openDebugTool() {
+            if (currentProvider === 'qwen') {
+                window.open('qwen-debug.html', '_blank');
+            } else {
+                alert('调试工具目前只支持阿里千问API');
+            }
+        }
+        
+        async function testAI() {
+            const message = document.getElementById('testMessage').value.trim();
+            if (!message) {
+                alert('请输入测试消息');
+                return;
+            }
+            
+            const resultDiv = document.getElementById('testResult');
+            resultDiv.innerHTML = '<div style="color: #6b7280; margin-top: 15px;">AI正在思考...</div>';
+            
+            try {
+                let response;
+                
+                if (currentProvider === 'mock') {
+                    // 使用模拟AI
+                    response = {
+                        success: true,
+                        text: `这是模拟AI的回复：我理解您说的"${message}"。作为JELILIAN AI助手，我可以帮您创建网站、生成内容等。`,
+                        provider: 'mock'
+                    };
+                } else {
+                    // 使用真实AI
+                    if (!aiIntegration) {
+                        throw new Error('请先配置API密钥');
+                    }
+                    response = await aiIntegration.chat(message, { provider: currentProvider });
+                }
+                
+                if (response.success) {
+                    resultDiv.innerHTML = `
+                        <div class="test-result success">
+                            <strong>✅ ${getProviderName(currentProvider)}回复：</strong><br>
+                            ${response.text}
+                            ${response.tokens ? `<br><small>使用Token: ${response.tokens}</small>` : ''}
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="test-result error">❌ 请求失败：${response.error}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="test-result error">❌ 测试失败：${error.message}</div>`;
+            }
+        }
+        
+        function applyConfig() {
+            // 保存配置
+            localStorage.setItem('jelilian_provider', currentProvider);
+            
+            alert(`配置已应用！当前使用：${getProviderName(currentProvider)}`);
+            
+            // 可以跳转回主页面
+            if (confirm('是否返回主页面？')) {
+                window.location.href = 'index.html';
+            }
+        }
+        
+        function resetConfig() {
+            if (confirm('确定要重置所有配置吗？')) {
+                localStorage.removeItem('jelilian_provider');
+                localStorage.removeItem('jelilian_openai_key');
+                localStorage.removeItem('jelilian_qwen_key');
+                localStorage.removeItem('jelilian_claude_key');
+                
+                selectProvider('mock');
+                document.getElementById('apiKeyInput').value = '';
+                document.getElementById('keyTestResult').innerHTML = '';
+                document.getElementById('testResult').innerHTML = '';
+                
+                alert('配置已重置');
+            }
+        }
+        
+        function loadSavedConfig() {
+            const savedProvider = localStorage.getItem('jelilian_provider') || 'mock';
+            selectProvider(savedProvider);
+            
+            // 加载保存的API密钥
+            if (savedProvider !== 'mock') {
+                const savedKey = localStorage.getItem(`jelilian_${savedProvider}_key`);
+                if (savedKey) {
+                    document.getElementById('apiKeyInput').value = savedKey;
+                }
+            }
+        }
+    </script>
+</body>
+</html>

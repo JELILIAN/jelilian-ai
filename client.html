@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JELILIAN - 后端API客户端</title>
+    <style>
+        body { font-family: system-ui; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { color: #6366f1; margin-bottom: 10px; }
+        .section { margin: 30px 0; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; }
+        .section h3 { color: #1f2937; margin-bottom: 15px; }
+        .input-group { margin: 15px 0; }
+        .input-group label { display: block; margin-bottom: 5px; font-weight: 600; color: #374151; }
+        .input-group input, .input-group textarea, .input-group select { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-family: inherit; }
+        .input-group textarea { height: 100px; resize: vertical; }
+        .btn { background: #6366f1; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-weight: 600; margin: 5px; transition: background 0.3s; }
+        .btn:hover { background: #4f46e5; }
+        .btn-success { background: #10b981; }
+        .btn-success:hover { background: #059669; }
+        .btn-warning { background: #f59e0b; }
+        .btn-warning:hover { background: #d97706; }
+        .btn-secondary { background: #6b7280; }
+        .btn-secondary:hover { background: #4b5563; }
+        .result { margin-top: 20px; padding: 15px; border-radius: 6px; }
+        .success { background: #d1fae5; color: #065f46; border: 1px solid #10b981; }
+        .error { background: #fee2e2; color: #991b1b; border: 1px solid #ef4444; }
+        .info { background: #dbeafe; color: #1e40af; border: 1px solid #3b82f6; }
+        .warning { background: #fef3c7; color: #92400e; border: 1px solid #f59e0b; }
+        .code { background: #f3f4f6; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 12px; overflow-x: auto; margin: 10px 0; white-space: pre-wrap; }
+        .chat-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .chat-messages { height: 400px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; background: #f8fafc; }
+        .message { margin-bottom: 15px; }
+        .user-message { text-align: right; }
+        .user-message .content { background: #6366f1; color: white; padding: 10px 15px; border-radius: 18px 18px 4px 18px; display: inline-block; max-width: 80%; }
+        .ai-message .content { background: white; color: #1f2937; padding: 10px 15px; border-radius: 18px 18px 18px 4px; display: inline-block; max-width: 80%; border: 1px solid #e5e7eb; }
+        .message-meta { font-size: 11px; color: #6b7280; margin-top: 5px; }
+        .loading { display: inline-block; width: 20px; height: 20px; border: 3px solid #f3f3f3; border-top: 3px solid #6366f1; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin: 20px 0; }
+        .stat-card { background: #f8fafc; padding: 15px; border-radius: 8px; text-align: center; border: 1px solid #e5e7eb; }
+        .stat-number { font-size: 1.5rem; font-weight: bold; color: #6366f1; }
+        .stat-label { font-size: 0.9rem; color: #6b7280; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 JELILIAN 后端API客户端</h1>
+            <p>通过后端服务器调用AI API，无CORS限制</p>
+            <div id="serverStatus" class="result info">正在检查服务器状态...</div>
+        </div>
+        
+        <div class="section">
+            <h3>🔧 API配置</h3>
+            <div class="input-group">
+                <label>选择AI服务商</label>
+                <select id="provider">
+                    <option value="qwen">阿里千问 (推荐)</option>
+                    <option value="openai">OpenAI GPT</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>API密钥</label>
+                <input type="password" id="apiKey" placeholder="输入API密钥">
+            </div>
+            <div class="input-group">
+                <label>模型选择 (可选)</label>
+                <select id="model">
+                    <option value="">默认模型</option>
+                    <option value="qwen-turbo">qwen-turbo</option>
+                    <option value="qwen-plus">qwen-plus</option>
+                    <option value="qwen-max">qwen-max</option>
+                    <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
+                    <option value="gpt-4">gpt-4</option>
+                </select>
+            </div>
+            <button class="btn btn-success" onclick="testConnection()">测试连接</button>
+            <button class="btn btn-secondary" onclick="getProviders()">获取支持的服务商</button>
+            <div id="configResult"></div>
+        </div>
+        
+        <div class="section">
+            <h3>💬 AI对话测试</h3>
+            <div class="chat-container">
+                <div>
+                    <div class="input-group">
+                        <label>消息内容</label>
+                        <textarea id="message" placeholder="输入您想要发送的消息...">你好，请介绍一下你自己，以及你能帮我做什么？</textarea>
+                    </div>
+                    <button class="btn" onclick="sendMessage()">发送消息</button>
+                    <button class="btn btn-warning" onclick="clearChat()">清空对话</button>
+                    
+                    <div class="stats" id="chatStats">
+                        <div class="stat-card">
+                            <div class="stat-number" id="messageCount">0</div>
+                            <div class="stat-label">消息数量</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="avgResponseTime">0ms</div>
+                            <div class="stat-label">平均响应时间</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="totalTokens">0</div>
+                            <div class="stat-label">总Token使用</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <label><strong>对话历史</strong></label>
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="message ai-message">
+                            <div class="content">您好！我是JELILIAN AI助手。请配置API密钥后开始对话。</div>
+                            <div class="message-meta">系统消息</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h3>🔍 批量对比测试</h3>
+            <div class="input-group">
+                <label>对比消息</label>
+                <textarea id="compareMessage" placeholder="输入要对比的消息...">请用一句话介绍人工智能</textarea>
+            </div>
+            <div class="input-group">
+                <label>OpenAI API密钥 (用于对比)</label>
+                <input type="password" id="openaiKey" placeholder="输入OpenAI API密钥 (可选)">
+            </div>
+            <button class="btn btn-warning" onclick="compareAIs()">对比不同AI响应</button>
+            <div id="compareResult"></div>
+        </div>
+        
+        <div class="section">
+            <h3>📊 服务器信息</h3>
+            <button class="btn btn-secondary" onclick="getServerInfo()">获取服务器信息</button>
+            <div id="serverInfo"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000/api';
+        let messageCount = 0;
+        let totalResponseTime = 0;
+        let totalTokens = 0;
+        
+        // 页面加载时检查服务器状态
+        document.addEventListener('DOMContentLoaded', function() {
+            checkServerStatus();
+        });
+        
+        async function checkServerStatus() {
+            const statusDiv = document.getElementById('serverStatus');
+            
+            try {
+                const response = await fetch(`${API_BASE}/providers`);
+                if (response.ok) {
+                    statusDiv.innerHTML = '<div class="result success">✅ 后端服务器运行正常</div>';
+                } else {
+                    throw new Error('服务器响应异常');
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `
+                    <div class="result error">
+                        ❌ 无法连接到后端服务器<br>
+                        <strong>请确保:</strong><br>
+                        1. 已安装依赖: <code>npm install</code><br>
+                        2. 已启动服务器: <code>npm start</code><br>
+                        3. 服务器运行在: <code>http://localhost:3000</code>
+                    </div>
+                `;
+            }
+        }
+        
+        async function testConnection() {
+            const provider = document.getElementById('provider').value;
+            const apiKey = document.getElementById('apiKey').value.trim();
+            const resultDiv = document.getElementById('configResult');
+            
+            if (!apiKey) {
+                resultDiv.innerHTML = '<div class="result error">❌ 请输入API密钥</div>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<div class="result info">🔄 正在测试连接...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/test`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        provider: provider,
+                        apiKey: apiKey
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="result success">
+                            ✅ 连接测试成功！<br>
+                            <strong>服务商:</strong> ${data.provider}<br>
+                            <strong>响应时间:</strong> ${data.responseTime}ms<br>
+                            <strong>测试响应:</strong> ${data.testResponse}
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="result error">
+                            ❌ 连接测试失败<br>
+                            <strong>错误:</strong> ${data.error}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        ❌ 请求失败: ${error.message}<br>
+                        请确保后端服务器正在运行
+                    </div>
+                `;
+            }
+        }
+        
+        async function sendMessage() {
+            const provider = document.getElementById('provider').value;
+            const apiKey = document.getElementById('apiKey').value.trim();
+            const message = document.getElementById('message').value.trim();
+            const model = document.getElementById('model').value;
+            
+            if (!apiKey || !message) {
+                alert('请输入API密钥和消息内容');
+                return;
+            }
+            
+            // 添加用户消息到聊天
+            addMessageToChat(message, 'user');
+            
+            // 显示加载状态
+            const loadingId = addMessageToChat('正在思考...', 'ai', true);
+            
+            try {
+                const startTime = Date.now();
+                
+                const response = await fetch(`${API_BASE}/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        provider: provider,
+                        apiKey: apiKey,
+                        options: {
+                            model: model || undefined,
+                            maxTokens: 1500,
+                            temperature: 0.8
+                        }
+                    })
+                });
+                
+                const data = await response.json();
+                
+                // 移除加载消息
+                removeMessage(loadingId);
+                
+                if (data.success) {
+                    // 添加AI响应
+                    addMessageToChat(data.text, 'ai', false, {
+                        responseTime: data.responseTime,
+                        tokens: data.tokens,
+                        model: data.model
+                    });
+                    
+                    // 更新统计
+                    updateStats(data.responseTime, data.tokens);
+                    
+                    // 清空输入框
+                    document.getElementById('message').value = '';
+                    
+                } else {
+                    addMessageToChat(`❌ 错误: ${data.error}`, 'ai');
+                }
+                
+            } catch (error) {
+                removeMessage(loadingId);
+                addMessageToChat(`❌ 请求失败: ${error.message}`, 'ai');
+            }
+        }
+        
+        function addMessageToChat(content, type, isLoading = false, meta = null) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}-message`;
+            messageDiv.id = messageId;
+            
+            let metaInfo = '';
+            if (meta) {
+                metaInfo = `<div class="message-meta">
+                    响应时间: ${meta.responseTime}ms | 
+                    Token: ${meta.tokens} | 
+                    模型: ${meta.model}
+                </div>`;
+            } else if (type === 'user') {
+                metaInfo = `<div class="message-meta">${new Date().toLocaleTimeString()}</div>`;
+            }
+            
+            messageDiv.innerHTML = `
+                <div class="content">
+                    ${isLoading ? '<span class="loading"></span> ' : ''}${content}
+                </div>
+                ${metaInfo}
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            return messageId;
+        }
+        
+        function removeMessage(messageId) {
+            const messageElement = document.getElementById(messageId);
+            if (messageElement) {
+                messageElement.remove();
+            }
+        }
+        
+        function updateStats(responseTime, tokens) {
+            messageCount++;
+            totalResponseTime += responseTime;
+            totalTokens += tokens;
+            
+            document.getElementById('messageCount').textContent = messageCount;
+            document.getElementById('avgResponseTime').textContent = 
+                Math.round(totalResponseTime / messageCount) + 'ms';
+            document.getElementById('totalTokens').textContent = totalTokens;
+        }
+        
+        function clearChat() {
+            document.getElementById('chatMessages').innerHTML = `
+                <div class="message ai-message">
+                    <div class="content">对话已清空，可以开始新的对话。</div>
+                    <div class="message-meta">系统消息</div>
+                </div>
+            `;
+            
+            // 重置统计
+            messageCount = 0;
+            totalResponseTime = 0;
+            totalTokens = 0;
+            updateStats(0, 0);
+        }
+        
+        async function getProviders() {
+            const resultDiv = document.getElementById('configResult');
+            
+            try {
+                const response = await fetch(`${API_BASE}/providers`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const providersList = data.providers.map(p => 
+                        `• <strong>${p.name}</strong>: ${p.description}`
+                    ).join('<br>');
+                    
+                    resultDiv.innerHTML = `
+                        <div class="result info">
+                            <strong>📋 支持的AI服务商:</strong><br><br>
+                            ${providersList}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="result error">❌ 获取服务商信息失败: ${error.message}</div>`;
+            }
+        }
+        
+        async function compareAIs() {
+            const message = document.getElementById('compareMessage').value.trim();
+            const qwenKey = document.getElementById('apiKey').value.trim();
+            const openaiKey = document.getElementById('openaiKey').value.trim();
+            const resultDiv = document.getElementById('compareResult');
+            
+            if (!message) {
+                resultDiv.innerHTML = '<div class="result error">❌ 请输入对比消息</div>';
+                return;
+            }
+            
+            const apiKeys = {};
+            const providers = [];
+            
+            if (qwenKey) {
+                apiKeys.qwen = qwenKey;
+                providers.push('qwen');
+            }
+            
+            if (openaiKey) {
+                apiKeys.openai = openaiKey;
+                providers.push('openai');
+            }
+            
+            if (providers.length === 0) {
+                resultDiv.innerHTML = '<div class="result error">❌ 请至少输入一个API密钥</div>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<div class="result info">🔄 正在对比不同AI的响应...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/compare`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        providers: providers,
+                        apiKeys: apiKeys
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    let compareHtml = `<div class="result success">
+                        <strong>🔍 AI对比结果:</strong><br>
+                        <strong>问题:</strong> ${data.message}<br><br>
+                    `;
+                    
+                    Object.entries(data.results).forEach(([provider, result]) => {
+                        const providerName = provider === 'qwen' ? '阿里千问' : 'OpenAI';
+                        
+                        if (result.success) {
+                            compareHtml += `
+                                <div style="margin: 15px 0; padding: 15px; border: 1px solid #e5e7eb; border-radius: 8px;">
+                                    <strong>${providerName}:</strong><br>
+                                    <div style="margin: 10px 0; padding: 10px; background: #f8fafc; border-radius: 6px;">
+                                        ${result.text}
+                                    </div>
+                                    <small>响应时间: ${result.responseTime}ms | Token: ${result.tokens}</small>
+                                </div>
+                            `;
+                        } else {
+                            compareHtml += `
+                                <div style="margin: 15px 0; padding: 15px; border: 1px solid #ef4444; border-radius: 8px; background: #fee2e2;">
+                                    <strong>${providerName}:</strong> ❌ ${result.error}
+                                </div>
+                            `;
+                        }
+                    });
+                    
+                    compareHtml += '</div>';
+                    resultDiv.innerHTML = compareHtml;
+                } else {
+                    resultDiv.innerHTML = `<div class="result error">❌ 对比失败: ${data.error}</div>`;
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="result error">❌ 对比请求失败: ${error.message}</div>`;
+            }
+        }
+        
+        async function getServerInfo() {
+            const resultDiv = document.getElementById('serverInfo');
+            
+            try {
+                const response = await fetch(`${API_BASE}/providers`);
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `
+                    <div class="result info">
+                        <strong>🖥️ 服务器信息:</strong><br><br>
+                        <strong>API地址:</strong> ${API_BASE}<br>
+                        <strong>状态:</strong> 运行正常<br>
+                        <strong>支持的服务商:</strong> ${data.providers.length}个<br>
+                        <strong>当前时间:</strong> ${new Date().toLocaleString()}<br><br>
+                        
+                        <strong>📡 可用端点:</strong><br>
+                        • POST /api/chat - AI对话<br>
+                        • POST /api/test - 连接测试<br>
+                        • GET /api/providers - 获取服务商<br>
+                        • POST /api/compare - 批量对比
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="result error">❌ 获取服务器信息失败: ${error.message}</div>`;
+            }
+        }
+        
+        // 快捷键支持
+        document.getElementById('message').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JELILIAN - AI智能开发平台</title>
+    <style>
+        /* 内联关键CSS - 极速版 */
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:system-ui,-apple-system,sans-serif;line-height:1.6;color:#333;background:#fafafa}
+        .container{max-width:1200px;margin:0 auto;padding:0 20px}
+        
+        /* 导航栏 */
+        .navbar{position:fixed;top:0;width:100%;background:rgba(255,255,255,.95);backdrop-filter:blur(10px);border-bottom:1px solid #e5e7eb;z-index:1000;height:70px}
+        .nav-container{max-width:1200px;margin:0 auto;padding:0 20px;display:flex;justify-content:space-between;align-items:center;height:100%}
+        .nav-logo h1{font-size:24px;font-weight:700;color:#6366f1}
+        .beta-tag{background:linear-gradient(135deg,#667eea,#764ba2);color:white;font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;margin-left:8px}
+        .nav-menu{display:flex;list-style:none;gap:32px;align-items:center}
+        .nav-menu a{text-decoration:none;color:#374151;font-weight:500;transition:color .2s}
+        .nav-menu a:hover{color:#6366f1}
+        .nav-cta{background:#6366f1;color:white!important;padding:8px 20px;border-radius:8px}
+        
+        /* 英雄区域 */
+        .hero{padding:120px 0 80px;background:linear-gradient(135deg,#667eea,#764ba2);color:white;text-align:center}
+        .hero-title{font-size:3rem;font-weight:700;margin-bottom:24px}
+        .hero-subtitle{font-size:1.2rem;opacity:.9;margin-bottom:32px;max-width:600px;margin-left:auto;margin-right:auto}
+        .hero-buttons{display:flex;gap:16px;justify-content:center;margin-bottom:40px}
+        .btn-primary{background:white;color:#6366f1;padding:12px 24px;border:none;border-radius:8px;font-weight:600;cursor:pointer;transition:transform .2s}
+        .btn-primary:hover{transform:translateY(-2px)}
+        .btn-secondary{background:transparent;color:white;border:2px solid white;padding:10px 22px;border-radius:8px;font-weight:600;cursor:pointer;transition:all .2s}
+        .btn-secondary:hover{background:white;color:#6366f1}
+        
+        /* 统计数据 */
+        .hero-stats{display:flex;gap:40px;justify-content:center;margin-top:40px}
+        .stat{text-align:center}
+        .stat-number{display:block;font-size:2rem;font-weight:700}
+        .stat-label{font-size:.9rem;opacity:.8}
+        
+        /* 功能区域 */
+        .features{padding:100px 0;background:white}
+        .section-header{text-align:center;margin-bottom:60px}
+        .section-header h2{font-size:2.5rem;font-weight:700;margin-bottom:16px;color:#1f2937}
+        .section-header p{font-size:1.25rem;color:#6b7280}
+        .features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:40px}
+        .feature-card{text-align:center;padding:40px 24px;border-radius:12px;transition:transform .3s}
+        .feature-card:hover{transform:translateY(-8px)}
+        .feature-icon{font-size:3rem;margin-bottom:24px}
+        .feature-card h3{font-size:1.5rem;font-weight:600;margin-bottom:16px;color:#1f2937}
+        .feature-card p{color:#6b7280}
+        
+        /* 工具区域 */
+        .tools{padding:100px 0;background:#f9fafb}
+        .tools-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:32px}
+        .tool-card{background:white;padding:32px;border-radius:12px;box-shadow:0 4px 6px rgba(0,0,0,.05);transition:all .3s}
+        .tool-card:hover{transform:translateY(-4px);box-shadow:0 20px 40px rgba(0,0,0,.1)}
+        .tool-icon{font-size:2.5rem;margin-bottom:20px}
+        .tool-card h3{font-size:1.25rem;font-weight:600;margin-bottom:12px;color:#1f2937}
+        .tool-card p{color:#6b7280;margin-bottom:16px}
+        .tool-btn{width:100%;padding:10px 20px;background:#6366f1;color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer}
+        
+        /* 试用区域 */
+        .playground{padding:100px 0;background:#f8fafc}
+        .playground-container{display:grid;grid-template-columns:1fr 1fr;gap:40px;max-width:1400px;margin:0 auto}
+        .playground-chat{background:white;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.1);overflow:hidden}
+        .chat-header{background:linear-gradient(135deg,#667eea,#764ba2);color:white;padding:20px;display:flex;justify-content:space-between;align-items:center}
+        .chat-messages{height:400px;overflow-y:auto;padding:20px}
+        .message{margin-bottom:16px;display:flex;gap:12px}
+        .ai-message .message-content{background:#f1f5f9;color:#1e293b;padding:12px 16px;border-radius:18px 18px 18px 4px;max-width:80%}
+        .chat-input{padding:16px 20px;border-top:1px solid #e2e8f0;display:flex;gap:12px}
+        .chat-input input{flex:1;padding:8px 12px;border:1px solid #e2e8f0;border-radius:20px;outline:none}
+        .chat-input button{width:36px;height:36px;border-radius:50%;background:#6366f1;color:white;border:none;cursor:pointer}
+        
+        /* 响应式 */
+        @media (max-width:768px){
+            .hero-title{font-size:2rem}
+            .hero-buttons{flex-direction:column;align-items:center}
+            .hero-stats{flex-wrap:wrap;gap:20px}
+            .playground-container{grid-template-columns:1fr}
+            .nav-menu{display:none}
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <h1>JELILIAN<span class="beta-tag">Beta</span></h1>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="#features">功能</a></li>
+                <li><a href="#tools">工具</a></li>
+                <li><a href="#playground">试用</a></li>
+                <li><a href="#pricing">定价</a></li>
+                <li><a href="#" class="nav-cta">开始构建</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- 主页面 -->
+    <main>
+        <!-- 英雄区域 -->
+        <section class="hero">
+            <div class="container">
+                <h1 class="hero-title">从想法到上线<br>只需一句话</h1>
+                <p class="hero-subtitle">JELILIAN 是新一代AI驱动的全栈开发平台。通过自然语言对话，瞬间生成完整的Web应用，包含前端、后端、数据库和部署。</p>
+                <div class="hero-buttons">
+                    <button class="btn-primary" onclick="scrollToPlayground()">🚀 立即开始构建</button>
+                    <button class="btn-secondary" onclick="showDemo()">▶️ 观看演示</button>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <span class="stat-number">10,000+</span>
+                        <span class="stat-label">应用已构建</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">5分钟</span>
+                        <span class="stat-label">平均构建时间</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">99.9%</span>
+                        <span class="stat-label">正常运行时间</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 功能特色 -->
+        <section id="features" class="features">
+            <div class="container">
+                <div class="section-header">
+                    <h2>为什么选择 JELILIAN</h2>
+                    <p>传统开发工具让您像程序员一样思考，JELILIAN让您像创始人一样思考</p>
+                </div>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">💬</div>
+                        <h3>对话式开发</h3>
+                        <p>用自然语言描述需求，AI自动生成完整的全栈应用</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🗄️</div>
+                        <h3>内置数据库</h3>
+                        <p>自动配置数据库、用户认证和后端API</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🔍</div>
+                        <h3>AI SEO优化</h3>
+                        <p>自动优化搜索引擎排名，提升网站可见性</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📦</div>
+                        <h3>代码导出</h3>
+                        <p>随时导出完整代码，部署到任何平台</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 工具展示 -->
+        <section id="tools" class="tools">
+            <div class="container">
+                <div class="section-header">
+                    <h2>强大的AI工具集</h2>
+                    <p>从简单回答到完整交付，JELILIAN提供全方位的AI工具</p>
+                </div>
+                <div class="tools-grid">
+                    <div class="tool-card">
+                        <div class="tool-icon">🌐</div>
+                        <h3>全栈网站构建器</h3>
+                        <p>从一句话描述生成完整的网站，包含前端、后端、数据库和部署</p>
+                        <button class="tool-btn">立即使用</button>
+                    </div>
+                    <div class="tool-card">
+                        <div class="tool-icon">🛒</div>
+                        <h3>电商网站生成器</h3>
+                        <p>创建完整的电商平台，集成支付、库存管理和订单处理</p>
+                        <button class="tool-btn">立即使用</button>
+                    </div>
+                    <div class="tool-card">
+                        <div class="tool-icon">🚀</div>
+                        <h3>落地页构建器</h3>
+                        <p>生成高转化率的营销落地页，内置A/B测试和分析</p>
+                        <button class="tool-btn">立即使用</button>
+                    </div>
+                    <div class="tool-card">
+                        <div class="tool-icon">✍️</div>
+                        <h3>专业文案生成器</h3>
+                        <p>生成营销文案、邮件内容和社交媒体文本</p>
+                        <button class="tool-btn">立即使用</button>
+                    </div>
+                    <div class="tool-card">
+                        <div class="tool-icon">🎨</div>
+                        <h3>AI设计生成器</h3>
+                        <p>创建、编辑和优化图像、视频和3D资产</p>
+                        <button class="tool-btn">立即使用</button>
+                    </div>
+                    <div class="tool-card">
+                        <div class="tool-icon">📊</div>
+                        <h3>数据可视化</h3>
+                        <p>将数据转换为清晰的图表和报告</p>
+                        <button class="tool-btn">立即使用</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 交互式试用区域 -->
+        <section id="playground" class="playground">
+            <div class="container">
+                <div class="section-header">
+                    <h2>立即体验 JELILIAN</h2>
+                    <p>尝试与AI对话，看看它如何理解您的需求并生成解决方案</p>
+                </div>
+                
+                <div class="playground-container">
+                    <div class="playground-chat">
+                        <div class="chat-header">
+                            <div>🤖 JELILIAN AI 助手</div>
+                            <div>🟢 在线</div>
+                        </div>
+                        
+                        <div class="chat-messages" id="chatMessages">
+                            <div class="message ai-message">
+                                <div class="message-content">
+                                    您好！我是JELILIAN AI助手。我可以帮您构建网站、创建内容、处理数据等。请告诉我您想要做什么？
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="chat-input">
+                            <input type="text" id="chatInput" placeholder="描述您想要创建的内容..." onkeypress="handleEnter(event)">
+                            <button onclick="sendMessage()">📤</button>
+                        </div>
+                    </div>
+                    
+                    <div class="playground-chat">
+                        <div class="chat-header">
+                            <div>📱 实时预览</div>
+                            <div>🖥️ 桌面版</div>
+                        </div>
+                        <div class="chat-messages" id="previewArea">
+                            <div style="display:flex;align-items:center;justify-content:center;height:100%;color:#64748b;text-align:center;">
+                                <div>
+                                    <div style="font-size:3rem;margin-bottom:16px;">✨</div>
+                                    <h3>AI魔法即将开始</h3>
+                                    <p>发送消息后，您将在这里看到实时生成的内容预览</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // 极简JavaScript - 只保留核心功能
+        let messageCount = 0;
+        
+        function scrollToPlayground() {
+            document.getElementById('playground').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function showDemo() {
+            alert('演示功能即将推出！敬请期待 🎉');
+        }
+        
+        function handleEnter(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+        
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            if (!message) return;
+            
+            // 立即添加用户消息
+            addMessage(message, 'user');
+            input.value = '';
+            
+            // 立即生成AI响应 - 无延迟
+            const response = generateResponse(message);
+            addMessage(response.text, 'ai');
+            updatePreview(response.preview);
+        }
+        
+        function addMessage(content, type) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}-message`;
+            
+            if (type === 'user') {
+                messageDiv.innerHTML = `<div style="background:#6366f1;color:white;padding:12px 16px;border-radius:18px 4px 18px 18px;margin-left:auto;max-width:80%;">${content}</div>`;
+            } else {
+                messageDiv.innerHTML = `<div class="message-content">${content}</div>`;
+            }
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        function generateResponse(message) {
+            // 预定义快速响应，避免复杂计算
+            const quickResponses = {
+                '网站': {
+                    text: `🚀 <strong>网站生成中...</strong><br><br>
+                    ✅ React + TypeScript<br>
+                    ✅ Node.js + Express<br>
+                    ✅ PostgreSQL 数据库<br>
+                    ✅ 自动部署配置<br><br>
+                    <strong>预计完成时间：3分钟</strong>`,
+                    preview: 'website'
+                },
+                '食品': {
+                    text: `🍕 <strong>食品网站生成完成！</strong><br><br>
+                    ✅ 美食展示页面<br>
+                    ✅ 在线订购系统<br>
+                    ✅ 配送区域设置<br>
+                    ✅ 支付集成完成<br>
+                    ✅ 移动端优化<br><br>
+                    <strong>🎉 网站已就绪，可以上线！</strong>`,
+                    preview: 'food'
+                },
+                '餐厅': {
+                    text: `🍽️ <strong>餐厅网站生成中...</strong><br><br>
+                    ✅ 菜单展示系统<br>
+                    ✅ 在线预订功能<br>
+                    ✅ 地图和联系方式<br>
+                    ✅ 移动端优化<br><br>
+                    <strong>正在生成代码...</strong>`,
+                    preview: 'restaurant'
+                },
+                '电商': {
+                    text: `🛒 <strong>电商平台生成中...</strong><br><br>
+                    ✅ 商品管理系统<br>
+                    ✅ 购物车功能<br>
+                    ✅ 支付集成<br>
+                    ✅ 订单管理<br><br>
+                    <strong>配置Stripe支付...</strong>`,
+                    preview: 'ecommerce'
+                },
+                '内容': {
+                    text: `✍️ <strong>内容创作中...</strong><br><br>
+                    ✅ SEO优化文案<br>
+                    ✅ 多平台适配<br>
+                    ✅ 品牌一致性<br>
+                    ✅ 转化率优化<br><br>
+                    <strong>内容已生成完成！</strong>`,
+                    preview: 'content'
+                }
+            };
+            
+            // 快速匹配关键词
+            for (const [key, response] of Object.entries(quickResponses)) {
+                if (message.includes(key)) {
+                    return response;
+                }
+            }
+            
+            // 默认快速响应
+            return {
+                text: `⚡ <strong>AI分析完成！</strong><br><br>
+                我可以立即帮您：<br>
+                🌐 构建专业网站<br>
+                ✍️ 创作优质内容<br>
+                🎨 设计视觉素材<br>
+                📊 处理数据分析<br><br>
+                <strong>请告诉我具体需求！</strong>`,
+                preview: 'default'
+            };
+        }
+        
+        function updatePreview(type) {
+            const previewArea = document.getElementById('previewArea');
+            const previews = {
+                'website': `<div style="padding:20px;background:white;border-radius:8px;margin:20px;">
+                    <h2 style="color:#6366f1;margin-bottom:16px;">🌟 您的新网站</h2>
+                    <div style="background:#f8fafc;padding:16px;border-radius:8px;margin-bottom:16px;">
+                        <h3>首页设计</h3>
+                        <p>现代化响应式设计 ✅</p>
+                    </div>
+                    <div style="background:#f8fafc;padding:16px;border-radius:8px;">
+                        <h3>功能模块</h3>
+                        <p>用户系统、内容管理 ✅</p>
+                    </div>
+                </div>`,
+                'food': `<div style="padding:20px;background:white;border-radius:8px;margin:20px;border-left:4px solid #f59e0b;">
+                    <h2 style="color:#f59e0b;margin-bottom:16px;">🍕 美食天地</h2>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+                        <div style="background:#fef3c7;padding:12px;border-radius:6px;text-align:center;">
+                            <div style="font-size:24px;margin-bottom:4px;">🍕</div>
+                            <div style="font-size:12px;color:#92400e;">意式披萨</div>
+                            <div style="color:#f59e0b;font-weight:600;">¥68</div>
+                        </div>
+                        <div style="background:#fef3c7;padding:12px;border-radius:6px;text-align:center;">
+                            <div style="font-size:24px;margin-bottom:4px;">🍔</div>
+                            <div style="font-size:12px;color:#92400e;">经典汉堡</div>
+                            <div style="color:#f59e0b;font-weight:600;">¥45</div>
+                        </div>
+                    </div>
+                    <button style="background:#f59e0b;color:white;border:none;padding:10px 20px;border-radius:6px;width:100%;font-weight:600;">🛒 立即订购</button>
+                </div>`,
+                'restaurant': `<div style="padding:20px;background:white;border-radius:8px;margin:20px;">
+                    <h2 style="color:#d97706;margin-bottom:16px;">🍽️ 美味餐厅</h2>
+                    <div style="background:#fef3c7;padding:16px;border-radius:8px;margin-bottom:16px;">
+                        <h3>招牌菜品</h3>
+                        <p>宫保鸡丁 - ¥38</p>
+                        <p>麻婆豆腐 - ¥28</p>
+                    </div>
+                    <button style="background:#d97706;color:white;border:none;padding:8px 16px;border-radius:4px;">在线预订</button>
+                </div>`,
+                'default': `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#64748b;text-align:center;">
+                    <div>
+                        <div style="font-size:3rem;margin-bottom:16px;">⚡</div>
+                        <h3>AI正在工作</h3>
+                        <p>正在分析您的需求...</p>
+                    </div>
+                </div>`
+            };
+            
+            previewArea.innerHTML = previews[type] || previews['default'];
+        }
+        
+        // 平滑滚动
+        document.addEventListener('click', function(e) {
+            const anchor = e.target.closest('a[href^="#"]');
+            if (anchor) {
+                e.preventDefault();
+                const target = document.querySelector(anchor.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            }
+        });
+    </script>
+</body>
+</html>

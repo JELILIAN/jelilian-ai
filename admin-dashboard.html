@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JELILIAN 管理后台</title>
+    <style>
+        body { font-family: system-ui; margin: 0; background: #f5f5f5; }
+        .header { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; padding: 20px; }
+        .header h1 { margin: 0; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 30px 0; }
+        .stat-card { 
+            background: white; padding: 25px; border-radius: 12px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: center;
+        }
+        .stat-number { font-size: 2.5rem; font-weight: bold; color: #6366f1; margin-bottom: 10px; }
+        .stat-label { color: #6b7280; font-size: 1.1rem; }
+        .stat-change { font-size: 0.9rem; margin-top: 5px; }
+        .stat-up { color: #10b981; }
+        .stat-down { color: #ef4444; }
+        
+        .chart-container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin: 20px 0; }
+        .chart-title { font-size: 1.3rem; font-weight: bold; color: #1f2937; margin-bottom: 20px; }
+        
+        .user-table { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .user-table table { width: 100%; border-collapse: collapse; }
+        .user-table th { background: #f8fafc; padding: 15px; text-align: left; font-weight: 600; color: #374151; }
+        .user-table td { padding: 15px; border-bottom: 1px solid #e5e7eb; }
+        .user-table tr:hover { background: #f8fafc; }
+        
+        .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
+        .status-pro { background: #d1fae5; color: #065f46; }
+        .status-free { background: #f3f4f6; color: #374151; }
+        .status-expired { background: #fee2e2; color: #991b1b; }
+        
+        .btn { 
+            background: #6366f1; color: white; border: none; padding: 8px 16px; 
+            border-radius: 6px; cursor: pointer; font-size: 0.9rem;
+        }
+        .btn:hover { background: #4f46e5; }
+        .btn-danger { background: #ef4444; }
+        .btn-danger:hover { background: #dc2626; }
+        
+        .filters { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .filters select, .filters input { padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; margin: 0 10px; }
+        
+        .revenue-chart { height: 300px; background: linear-gradient(135deg, #f0f9ff, #e0f2fe); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #0369a1; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <h1>📊 JELILIAN 管理后台</h1>
+            <p>实时监控用户数据和收入情况</p>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="totalUsers">1,234</div>
+                <div class="stat-label">总用户数</div>
+                <div class="stat-change stat-up">↗ +12% 本月</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-number" id="proUsers">156</div>
+                <div class="stat-label">专业版用户</div>
+                <div class="stat-change stat-up">↗ +23% 本月</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-number" id="monthlyRevenue">¥4,524</div>
+                <div class="stat-label">月收入</div>
+                <div class="stat-change stat-up">↗ +18% 本月</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-number" id="apiCalls">45,678</div>
+                <div class="stat-label">API调用次数</div>
+                <div class="stat-change stat-up">↗ +8% 本周</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-number" id="conversionRate">12.6%</div>
+                <div class="stat-label">付费转化率</div>
+                <div class="stat-change stat-down">↘ -2% 本月</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-number" id="avgResponseTime">245ms</div>
+                <div class="stat-label">平均响应时间</div>
+                <div class="stat-change stat-up">↗ 优化15%</div>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <div class="chart-title">📈 收入趋势</div>
+            <div class="revenue-chart">
+                <div style="text-align: center;">
+                    <div style="font-size: 1.5rem; margin-bottom: 10px;">📊</div>
+                    <div>收入图表将在这里显示</div>
+                    <div style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">集成Chart.js或其他图表库</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="filters">
+            <strong>筛选条件:</strong>
+            <select id="statusFilter">
+                <option value="">所有状态</option>
+                <option value="pro">专业版</option>
+                <option value="free">免费版</option>
+                <option value="expired">已过期</option>
+            </select>
+            
+            <input type="date" id="dateFilter" />
+            
+            <input type="text" id="searchFilter" placeholder="搜索用户..." />
+            
+            <button class="btn" onclick="applyFilters()">应用筛选</button>
+            <button class="btn" onclick="exportData()">导出数据</button>
+        </div>
+        
+        <div class="user-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>用户ID</th>
+                        <th>注册时间</th>
+                        <th>订阅状态</th>
+                        <th>到期时间</th>
+                        <th>使用次数</th>
+                        <th>总消费</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="userTableBody">
+                    <!-- 用户数据将通过JavaScript动态加载 -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // 模拟用户数据
+        const mockUsers = [
+            {
+                id: 'U001',
+                registerDate: '2024-01-15',
+                status: 'pro',
+                expiryDate: '2024-02-15',
+                usageCount: 245,
+                totalSpent: 29
+            },
+            {
+                id: 'U002',
+                registerDate: '2024-01-20',
+                status: 'free',
+                expiryDate: null,
+                usageCount: 8,
+                totalSpent: 0
+            },
+            {
+                id: 'U003',
+                registerDate: '2024-01-10',
+                status: 'expired',
+                expiryDate: '2024-01-25',
+                usageCount: 156,
+                totalSpent: 58
+            },
+            {
+                id: 'U004',
+                registerDate: '2024-01-22',
+                status: 'pro',
+                expiryDate: '2024-02-22',
+                usageCount: 89,
+                totalSpent: 29
+            },
+            {
+                id: 'U005',
+                registerDate: '2024-01-18',
+                status: 'free',
+                expiryDate: null,
+                usageCount: 3,
+                totalSpent: 0
+            }
+        ];
+        
+        function loadUserTable() {
+            const tbody = document.getElementById('userTableBody');
+            tbody.innerHTML = '';
+            
+            mockUsers.forEach(user => {
+                const row = document.createElement('tr');
+                
+                const statusBadge = getStatusBadge(user.status);
+                const expiryDisplay = user.expiryDate ? new Date(user.expiryDate).toLocaleDateString() : '-';
+                
+                row.innerHTML = `
+                    <td>${user.id}</td>
+                    <td>${new Date(user.registerDate).toLocaleDateString()}</td>
+                    <td>${statusBadge}</td>
+                    <td>${expiryDisplay}</td>
+                    <td>${user.usageCount}</td>
+                    <td>¥${user.totalSpent}</td>
+                    <td>
+                        <button class="btn" onclick="viewUser('${user.id}')">查看</button>
+                        <button class="btn btn-danger" onclick="suspendUser('${user.id}')">暂停</button>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+        
+        function getStatusBadge(status) {
+            const badges = {
+                'pro': '<span class="status-badge status-pro">专业版</span>',
+                'free': '<span class="status-badge status-free">免费版</span>',
+                'expired': '<span class="status-badge status-expired">已过期</span>'
+            };
+            return badges[status] || badges['free'];
+        }
+        
+        function viewUser(userId) {
+            alert(`查看用户 ${userId} 的详细信息`);
+            // 这里可以打开用户详情弹窗或跳转到详情页
+        }
+        
+        function suspendUser(userId) {
+            if (confirm(`确定要暂停用户 ${userId} 吗？`)) {
+                alert(`用户 ${userId} 已被暂停`);
+                // 这里调用API暂停用户
+            }
+        }
+        
+        function applyFilters() {
+            const statusFilter = document.getElementById('statusFilter').value;
+            const dateFilter = document.getElementById('dateFilter').value;
+            const searchFilter = document.getElementById('searchFilter').value;
+            
+            console.log('应用筛选:', { statusFilter, dateFilter, searchFilter });
+            // 这里实现筛选逻辑
+            alert('筛选功能已应用');
+        }
+        
+        function exportData() {
+            // 模拟导出CSV数据
+            const csvContent = "data:text/csv;charset=utf-8," 
+                + "用户ID,注册时间,订阅状态,到期时间,使用次数,总消费\n"
+                + mockUsers.map(user => 
+                    `${user.id},${user.registerDate},${user.status},${user.expiryDate || ''},${user.usageCount},${user.totalSpent}`
+                ).join("\n");
+            
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "jelilian_users.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        // 实时更新统计数据
+        function updateStats() {
+            // 模拟实时数据更新
+            const totalUsers = document.getElementById('totalUsers');
+            const currentValue = parseInt(totalUsers.textContent.replace(',', ''));
+            totalUsers.textContent = (currentValue + Math.floor(Math.random() * 3)).toLocaleString();
+        }
+        
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserTable();
+            
+            // 每30秒更新一次统计数据
+            setInterval(updateStats, 30000);
+        });
+        
+        // 添加实时通知功能
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed; top: 20px; right: 20px; z-index: 1000;
+                background: ${type === 'success' ? '#10b981' : '#6366f1'};
+                color: white; padding: 15px 20px; border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                animation: slideIn 0.3s ease-out;
+            `;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+        
+        // 模拟新用户注册通知
+        setTimeout(() => {
+            showNotification('新用户注册：U006', 'success');
+        }, 5000);
+        
+        setTimeout(() => {
+            showNotification('用户 U003 升级到专业版', 'success');
+        }, 10000);
+    </script>
+    
+    <style>
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    </style>
+</body>
+</html>
