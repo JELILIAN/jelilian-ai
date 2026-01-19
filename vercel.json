@@ -25,5 +25,10 @@
     "DEFAULT_PROVIDER": "qwen",
     "ENABLE_API_KEY_INPUT": "false",
     "NODE_ENV": "production"
+  },
+  "functions": {
+    "server.js": {
+      "maxDuration": 30
+    }
   }
 }
