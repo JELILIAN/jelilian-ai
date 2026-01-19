@@ -1,16 +1,17 @@
 {
-  "name": "jelilian-smart-ai",
+  "name": "jelilian-ai-2025",
   "functions": {
-    "api/*.js": {
+    "api/chat.js": {
+      "runtime": "@vercel/node@3",
+      "maxDuration": 30
+    },
+    "api/config.js": {
+      "runtime": "@vercel/node@3"
+    },
+    "api/usage.js": {
       "runtime": "@vercel/node@3"
     }
   },
-  "rewrites": [
-    {
-      "source": "/",
-      "destination": "/index.html"
-    }
-  ],
   "env": {
     "QWEN_API_KEY": "sk-bddda4e9e2ef4aa5acdb773207ac4036",
     "DEFAULT_PROVIDER": "qwen",
