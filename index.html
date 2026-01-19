@@ -3,312 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JELILIAN</title>
+    <title>JELILIAN AI - 工作版本</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-            background: #f8f9fa; color: #333; line-height: 1.6;
-            min-height: 100vh; display: flex; flex-direction: column;
-        }
-        
-        /* 顶部导航栏 */
-        .header {
-            background: white; padding: 12px 24px; border-bottom: 1px solid #e9ecef;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        
-        .logo {
-            font-size: 1.2rem; font-weight: 600; color: #333;
-        }
-        
-        .user-avatar {
-            width: 32px; height: 32px; border-radius: 50%;
-            background: #28a745; display: flex; align-items: center; justify-content: center;
-            color: white; font-weight: 600; cursor: pointer;
-        }
-        
-        /* 主内容区域 */
-        .main-content {
-            flex: 1; display: flex; flex-direction: column; align-items: center;
-            justify-content: center; padding: 40px 20px;
-        }
-        
-        .main-title {
-            font-size: 2.5rem; font-weight: 400; color: #333;
-            margin-bottom: 40px; text-align: center;
-        }
-        
-        /* 输入区域 */
-        .input-container {
-            width: 100%; max-width: 600px; position: relative;
-        }
-        
-        .main-input {
-            width: 100%; min-height: 120px; padding: 20px;
-            border: 2px solid #e9ecef; border-radius: 12px;
-            font-size: 1rem; font-family: inherit; resize: none;
-            background: white; outline: none; transition: border-color 0.3s;
-        }
-        
-        .main-input:focus {
-            border-color: #007bff;
-        }
-        
-        .main-input::placeholder {
-            color: #adb5bd;
-        }
-        
-        .input-actions {
-            position: absolute; bottom: 15px; right: 15px;
-            display: flex; gap: 10px; align-items: center;
-        }
-        
-        .input-btn {
-            width: 32px; height: 32px; border: none; border-radius: 6px;
-            background: #f8f9fa; cursor: pointer; display: flex;
-            align-items: center; justify-content: center; transition: all 0.3s;
-        }
-        
-        .input-btn:hover {
-            background: #e9ecef;
-        }
-        
-        .send-btn {
-            background: #007bff; color: white;
-        }
-        
-        .send-btn:hover {
-            background: #0056b3;
-        }
-        
-        /* 功能标签栏 */
-        .function-tabs {
-            margin-top: 30px; display: flex; gap: 20px; flex-wrap: wrap;
-            justify-content: center;
-        }
-        
-        .function-tab {
-            padding: 8px 16px; border: 1px solid #e9ecef; border-radius: 20px;
-            background: white; color: #666; text-decoration: none;
-            font-size: 0.9rem; transition: all 0.3s; cursor: pointer;
-        }
-        
-        .function-tab:hover {
-            border-color: #007bff; color: #007bff;
-        }
-        
-        .function-tab.active {
-            background: #007bff; color: white; border-color: #007bff;
-        }
-        
-        /* 建议卡片 */
-        .suggestions {
-            margin-top: 40px; width: 100%; max-width: 800px;
-        }
-        
-        .suggestion-card {
-            background: white; border: 1px solid #e9ecef; border-radius: 12px;
-            padding: 20px; margin-bottom: 16px; cursor: pointer;
-            transition: all 0.3s; display: flex; align-items: center; gap: 16px;
-        }
-        
-        .suggestion-card:hover {
-            border-color: #007bff; box-shadow: 0 2px 8px rgba(0,123,255,0.1);
-        }
-        
-        .suggestion-icon {
-            width: 48px; height: 48px; border-radius: 8px;
-            background: #f8f9fa; display: flex; align-items: center;
-            justify-content: center; font-size: 1.5rem;
-        }
-        
-        .suggestion-content h3 {
-            font-size: 1.1rem; font-weight: 600; color: #333;
-            margin-bottom: 4px;
-        }
-        
-        .suggestion-content p {
-            color: #666; font-size: 0.9rem; line-height: 1.4;
-        }
-        
-        /* 使用次数显示 */
-        .usage-indicator {
-            position: fixed; top: 20px; right: 20px; background: rgba(255,255,255,0.95);
-            padding: 10px 15px; border-radius: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            font-size: 0.9rem; color: #666; z-index: 100;
-        }
-        
-        .usage-indicator.warning {
-            background: rgba(255,243,205,0.95); color: #856404; border: 1px solid #ffeaa7;
-        }
-        
-        .usage-indicator.danger {
-            background: rgba(248,215,218,0.95); color: #721c24; border: 1px solid #f5c6cb;
-        }
-        
-        /* 响应式设计 */
-        @media (max-width: 768px) {
-            .main-title { font-size: 2rem; }
-            .function-tabs { gap: 10px; }
-            .suggestion-card { flex-direction: column; text-align: center; }
-            .usage-indicator { top: 10px; right: 10px; font-size: 0.8rem; }
-        }
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+        .container { text-align: center; }
+        .input-box { width: 100%; padding: 15px; margin: 20px 0; border: 2px solid #007bff; border-radius: 8px; font-size: 16px; }
+        .send-btn { padding: 15px 30px; background: #007bff; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
+        .send-btn:hover { background: #0056b3; }
+        .result { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background: #f8f9fa; text-align: left; }
+        .tabs { margin: 20px 0; }
+        .tab { display: inline-block; padding: 10px 20px; margin: 5px; background: #f8f9fa; border: 1px solid #ddd; border-radius: 20px; cursor: pointer; }
+        .tab:hover { background: #007bff; color: white; }
     </style>
 </head>
 <body>
-    <!-- 使用次数指示器 -->
-    <div class="usage-indicator" id="usageIndicator" style="display: none;">
-        <span id="usageText">加载中...</span>
+    <div class="container">
+        <h1>🤖 JELILIAN AI 助手</h1>
+        <p>我能为你做什么？</p>
+        
+        <div class="tabs">
+            <div class="tab" onclick="setPrompt('帮我创建一个现代化的企业官网')">🌐 创建网站</div>
+            <div class="tab" onclick="setPrompt('帮我写一份专业的商业计划书')">✍️ 内容写作</div>
+            <div class="tab" onclick="setPrompt('为我的公司设计一个现代简洁的Logo')">🎨 设计</div>
+            <div class="tab" onclick="setPrompt('帮我分析数据并生成报告')">📊 数据分析</div>
+        </div>
+        
+        <textarea id="messageInput" class="input-box" placeholder="输入你的问题或需求..."></textarea>
+        <br>
+        <button class="send-btn" onclick="sendMessage()">发送消息 ↗</button>
+        
+        <div id="result" class="result" style="display: none;"></div>
     </div>
-    
-    <!-- 顶部导航 -->
-    <header class="header">
-        <div class="logo">JELILIAN</div>
-        <div class="user-avatar">J</div>
-    </header>
-    
-    <!-- 主内容 -->
-    <main class="main-content">
-        <h1 class="main-title">我能为你做什么？</h1>
-        
-        <!-- 输入区域 -->
-        <div class="input-container">
-            <textarea class="main-input" id="mainInput" placeholder="分享一个任务或询问你的问题"></textarea>
-            <div class="input-actions">
-                <button class="input-btn" onclick="attachFile()">📎</button>
-                <button class="input-btn" onclick="voiceInput()">🎤</button>
-                <button class="input-btn send-btn" onclick="sendMessage()">↗</button>
-            </div>
-        </div>
-        
-        <!-- 功能标签 -->
-        <div class="function-tabs">
-            <div class="function-tab active" onclick="switchTab('slides')">📊 制作幻灯片</div>
-            <div class="function-tab" onclick="switchTab('website')">🌐 创建网站</div>
-            <div class="function-tab" onclick="switchTab('app')">📱 升级应用</div>
-            <div class="function-tab" onclick="switchTab('design')">🎨 设计</div>
-            <div class="function-tab" onclick="switchTab('more')">➕ 更多</div>
-        </div>
-        
-        <!-- 建议卡片 -->
-        <div class="suggestions" id="suggestions">
-            <!-- 动态加载建议内容 -->
-        </div>
-    </main>
-</body>
-</html>
-    
+
     <script>
-        // API配置
-        const API_BASE = window.location.origin + '/api';
-        
-        // 建议内容数据
-        const suggestions = {
-            slides: [
-                {
-                    icon: '🍌',
-                    title: '使用JELILIAN Pro创建幻灯片',
-                    description: '创建设计专业级别的幻灯片，具有各种主题和布局选项。',
-                    prompt: '帮我创建一个关于产品发布的专业演示文稿，包含市场分析、产品特性和商业计划'
-                }
-            ],
-            website: [
-                {
-                    icon: '🌐',
-                    title: '创建响应式网站',
-                    description: '构建现代化的响应式网站，包含完整的前端和后端功能。',
-                    prompt: '帮我创建一个现代化的企业官网，包含首页、产品展示、关于我们和联系方式页面'
-                },
-                {
-                    icon: '🛒',
-                    title: '电商网站开发',
-                    description: '开发功能完整的电商平台，包含购物车、支付和订单管理。',
-                    prompt: '创建一个完整的电商网站，包含商品展示、购物车、用户注册和支付功能'
-                }
-            ],
-            app: [
-                {
-                    icon: '📱',
-                    title: '移动应用开发',
-                    description: '开发跨平台移动应用，支持iOS和Android系统。',
-                    prompt: '帮我设计一个移动应用的原型，包含用户界面和核心功能规划'
-                }
-            ],
-            design: [
-                {
-                    icon: '🎨',
-                    title: 'Logo设计',
-                    description: '创建专业的品牌Logo和视觉识别系统。',
-                    prompt: '为我的公司设计一个现代简洁的Logo，体现科技感和专业性'
-                },
-                {
-                    icon: '🖼️',
-                    title: '海报设计',
-                    description: '设计吸引人的宣传海报和营销素材。',
-                    prompt: '设计一张产品宣传海报，风格现代简约，突出产品特色'
-                }
-            ],
-            more: [
-                {
-                    icon: '✍️',
-                    title: '内容写作',
-                    description: '撰写各类专业文档、文案和创意内容。',
-                    prompt: '帮我写一份专业的商业计划书，包含市场分析和财务预测'
-                },
-                {
-                    icon: '📊',
-                    title: '数据分析',
-                    description: '处理和分析数据，生成可视化图表和报告。',
-                    prompt: '帮我分析这些销售数据，生成趋势图表和业务洞察报告'
-                },
-                {
-                    icon: '🔧',
-                    title: '自定义工具',
-                    description: '创建专门的在线工具和计算器。',
-                    prompt: '创建一个在线计算器工具，支持复杂的数学运算和单位转换'
-                }
-            ]
-        };
-        
-        // 切换功能标签
-        function switchTab(tabName) {
-            // 更新标签样式
-            document.querySelectorAll('.function-tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            event.target.classList.add('active');
-            
-            // 更新建议内容
-            updateSuggestions(tabName);
+        function setPrompt(text) {
+            document.getElementById('messageInput').value = text;
         }
         
-        // 更新建议内容
-        function updateSuggestions(tabName) {
-            const suggestionsContainer = document.getElementById('suggestions');
-            const tabSuggestions = suggestions[tabName] || [];
-            
-            suggestionsContainer.innerHTML = tabSuggestions.map(suggestion => `
-                <div class="suggestion-card" onclick="useSuggestion('${suggestion.prompt}')">
-                    <div class="suggestion-icon">${suggestion.icon}</div>
-                    <div class="suggestion-content">
-                        <h3>${suggestion.title}</h3>
-                        <p>${suggestion.description}</p>
-                    </div>
-                </div>
-            `).join('');
-        }
-        
-        // 使用建议
-        function useSuggestion(prompt) {
-            document.getElementById('mainInput').value = prompt;
-            document.getElementById('mainInput').focus();
-        }
-        
-        // 发送消息
         async function sendMessage() {
-            const input = document.getElementById('mainInput');
+            const input = document.getElementById('messageInput');
+            const resultDiv = document.getElementById('result');
             const message = input.value.trim();
             
             if (!message) {
@@ -316,322 +50,58 @@
                 return;
             }
             
-            // 获取系统配置和使用状态
-            let systemConfig;
-            try {
-                const configResponse = await fetch(`${API_BASE}/config`);
-                systemConfig = await configResponse.json();
-            } catch (error) {
-                console.error('获取系统配置失败:', error);
-                systemConfig = { config: { enableApiKeyInput: true }, usage: { remaining: 0 } };
-            }
-            
-            // 检查使用次数限制
-            if (systemConfig.usage && systemConfig.usage.remaining <= 0) {
-                showUsageLimitModal(systemConfig.usage);
-                return;
-            }
-            
-            // 检查是否需要用户输入API密钥
-            let apiKey = null;
-            let provider = 'qwen';
-            
-            if (systemConfig.config.enableApiKeyInput) {
-                // 需要用户输入API密钥
-                apiKey = localStorage.getItem('jelilian_api_key');
-                provider = localStorage.getItem('jelilian_provider') || 'qwen';
-                
-                if (!apiKey) {
-                    showConfigModal();
-                    return;
-                }
-            } else {
-                // 使用服务器默认配置
-                provider = systemConfig.config.defaultProvider || 'qwen';
-            }
-            
-            // 显示处理状态
-            input.value = '正在处理您的请求...';
-            input.disabled = true;
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<p>🔄 AI正在处理您的请求，请稍候...</p>';
             
             try {
-                const requestBody = {
-                    message: message,
-                    provider: provider,
-                    options: { maxTokens: 2000 }
-                };
-                
-                // 只有在需要时才添加API密钥
-                if (apiKey) {
-                    requestBody.apiKey = apiKey;
-                }
-                
-                const response = await fetch(`${API_BASE}/chat`, {
+                const response = await fetch('/api/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(requestBody)
+                    body: JSON.stringify({
+                        message: message,
+                        provider: 'qwen',
+                        options: { maxTokens: 1000 }
+                    })
                 });
                 
                 const data = await response.json();
                 
-                if (data.success) {
-                    // 显示结果
-                    showResult(message, data.text, data.usage);
+                if (response.ok && data.success) {
+                    resultDiv.innerHTML = `
+                        <h3>✅ AI回复：</h3>
+                        <div style="background: white; padding: 15px; border-radius: 4px; margin: 10px 0;">
+                            ${data.text.replace(/\n/g, '<br>')}
+                        </div>
+                        <p><small>响应时间: ${data.responseTime}ms | 剩余使用次数: ${data.usage ? data.usage.remaining : '未知'}</small></p>
+                    `;
                 } else {
-                    if (response.status === 429) {
-                        // 使用次数超限
-                        showUsageLimitModal(data.usageInfo, data.upgradeInfo);
-                    } else {
-                        alert('处理失败: ' + data.error);
-                    }
-                    input.value = message;
+                    resultDiv.innerHTML = `
+                        <h3>❌ 处理失败：</h3>
+                        <p>${data.error || '未知错误'}</p>
+                        <p>状态码: ${response.status}</p>
+                    `;
                 }
             } catch (error) {
-                alert('请求失败: ' + error.message);
-                input.value = message;
-            } finally {
-                input.disabled = false;
-            }
-        }
-        
-        // 显示结果
-        function showResult(question, answer, usage) {
-            const resultWindow = window.open('', '_blank', 'width=800,height=600');
-            
-            let usageInfo = '';
-            if (usage) {
-                usageInfo = `
-                    <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                        <h3 style="color: #856404; margin: 0 0 10px 0;">📊 使用情况</h3>
-                        <p style="margin: 0; color: #856404;">
-                            已使用: ${usage.used}/${usage.limit} 次 | 
-                            剩余: ${usage.remaining} 次
-                            ${usage.remaining === 0 ? '<br><strong>⚠️ 免费额度已用完，请联系管理员获取更多使用次数</strong>' : ''}
-                        </p>
-                    </div>
+                resultDiv.innerHTML = `
+                    <h3>❌ 请求失败：</h3>
+                    <p>${error.message}</p>
+                    <p>请检查网络连接或稍后重试</p>
                 `;
             }
-            
-            resultWindow.document.write(`
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>JELILIAN - 处理结果</title>
-                    <style>
-                        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 40px; line-height: 1.6; }
-                        .question { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-                        .answer { background: white; padding: 20px; border: 1px solid #e9ecef; border-radius: 8px; }
-                        h2 { color: #333; margin-bottom: 10px; }
-                        pre { white-space: pre-wrap; word-wrap: break-word; }
-                    </style>
-                </head>
-                <body>
-                    <div class="question">
-                        <h2>您的需求：</h2>
-                        <p>${question}</p>
-                    </div>
-                    <div class="answer">
-                        <h2>JELILIAN 的回答：</h2>
-                        <pre>${answer}</pre>
-                    </div>
-                    ${usageInfo}
-                </body>
-                </html>
-            `);
-            
-            // 清空输入框
-            document.getElementById('mainInput').value = '';
         }
         
-        // 显示使用次数限制弹窗
-        function showUsageLimitModal(usageInfo, upgradeInfo) {
-            const modal = document.createElement('div');
-            modal.style.cssText = `
-                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background: rgba(0,0,0,0.5); display: flex; align-items: center;
-                justify-content: center; z-index: 1000;
-            `;
-            
-            modal.innerHTML = `
-                <div style="background: white; padding: 40px; border-radius: 12px; max-width: 500px; width: 90%; text-align: center;">
-                    <div style="font-size: 60px; margin-bottom: 20px;">⚠️</div>
-                    <h2 style="color: #dc3545; margin-bottom: 20px;">免费使用次数已用完</h2>
-                    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: left;">
-                        <h4 style="margin: 0 0 10px 0; color: #495057;">使用记录：</h4>
-                        <p style="margin: 5px 0; color: #6c757d;">已使用次数: ${usageInfo ? usageInfo.used : 1}</p>
-                        <p style="margin: 5px 0; color: #6c757d;">免费限制: ${usageInfo ? usageInfo.limit : 1} 次</p>
-                        ${usageInfo && usageInfo.firstUse ? `<p style="margin: 5px 0; color: #6c757d;">首次使用: ${usageInfo.firstUse}</p>` : ''}
-                    </div>
-                    <div style="background: #e7f3ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                        <h4 style="margin: 0 0 15px 0; color: #0066cc;">💎 升级到付费版本</h4>
-                        <ul style="text-align: left; color: #0066cc; margin: 0; padding-left: 20px;">
-                            <li>无限制使用AI功能</li>
-                            <li>更快的响应速度</li>
-                            <li>优先客服支持</li>
-                            <li>更多高级功能</li>
-                        </ul>
-                    </div>
-                    <div style="margin-top: 30px;">
-                        <button onclick="this.closest('div').parentElement.remove()" 
-                                style="padding: 12px 24px; background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer; margin: 0 10px;">
-                            关闭
-                        </button>
-                        <button onclick="window.open('qr-payment.html', '_blank')" 
-                                style="padding: 12px 24px; background: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; margin: 0 10px;">
-                            扫码支付
-                        </button>
-                        <button onclick="contactAdmin()" 
-                                style="padding: 12px 24px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; margin: 0 10px;">
-                            联系客服
-                        </button>
-                    </div>
-                </div>
-            `;
-            
-            document.body.appendChild(modal);
-        }
-        
-        // 联系管理员
-        function contactAdmin() {
-            alert(`升级到JELILIAN AI付费版本：
-
-💰 价格方案：
-• 个人版: ¥29/月 或 $4.99/月 (无限使用)
-• 专业版: ¥99/月 或 $14.99/月 (高级功能)
-• 年付优惠: ¥299/年 或 $49.99/年
-
-💳 支付方式：
-• 微信支付: 扫码支付 (国内推荐)
-• 支付宝: 扫码支付 (国内推荐)
-• PayPal: +8618501935068 (国际用户)
-
-📞 联系方式：
-• 微信: 18501935068
-• 邮箱: 18501935068@163.com
-• PayPal: +8618501935068
-
-⚡ 扫码付款或PayPal转账后请截图发送给客服，立即开通！
-💎 付费版本支持无限制使用所有AI功能！`);
-        }
-        
-        // 显示配置弹窗
-        function showConfigModal() {
-            const modal = document.createElement('div');
-            modal.style.cssText = `
-                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background: rgba(0,0,0,0.5); display: flex; align-items: center;
-                justify-content: center; z-index: 1000;
-            `;
-            
-            modal.innerHTML = `
-                <div style="background: white; padding: 40px; border-radius: 12px; max-width: 500px; width: 90%;">
-                    <h2 style="margin-bottom: 20px;">配置API密钥</h2>
-                    <div style="margin-bottom: 20px;">
-                        <label style="display: block; margin-bottom: 8px;">AI服务商：</label>
-                        <select id="providerSelect" style="width: 100%; padding: 10px; border: 1px solid #e9ecef; border-radius: 6px;">
-                            <option value="qwen">阿里千问 (推荐)</option>
-                            <option value="openai">OpenAI GPT</option>
-                        </select>
-                    </div>
-                    <div style="margin-bottom: 20px;">
-                        <label style="display: block; margin-bottom: 8px;">API密钥：</label>
-                        <input type="password" id="apiKeyInput" placeholder="输入您的API密钥" 
-                               style="width: 100%; padding: 10px; border: 1px solid #e9ecef; border-radius: 6px;">
-                    </div>
-                    <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                        <button onclick="this.closest('div').parentElement.remove()" 
-                                style="padding: 10px 20px; border: 1px solid #e9ecef; background: white; border-radius: 6px; cursor: pointer;">
-                            取消
-                        </button>
-                        <button onclick="saveConfig()" 
-                                style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer;">
-                            保存
-                        </button>
-                    </div>
-                </div>
-            `;
-            
-            document.body.appendChild(modal);
-        }
-        
-        // 保存配置
-        function saveConfig() {
-            const provider = document.getElementById('providerSelect').value;
-            const apiKey = document.getElementById('apiKeyInput').value.trim();
-            
-            if (!apiKey) {
-                alert('请输入API密钥');
-                return;
-            }
-            
-            localStorage.setItem('jelilian_provider', provider);
-            localStorage.setItem('jelilian_api_key', apiKey);
-            
-            document.querySelector('[style*="position: fixed"]').remove();
-            alert('配置保存成功！');
-        }
-        
-        // 附件功能
-        function attachFile() {
-            alert('文件上传功能开发中...');
-        }
-        
-        // 语音输入
-        function voiceInput() {
-            if ('webkitSpeechRecognition' in window) {
-                const recognition = new webkitSpeechRecognition();
-                recognition.lang = 'zh-CN';
-                recognition.onresult = function(event) {
-                    document.getElementById('mainInput').value = event.results[0][0].transcript;
-                };
-                recognition.start();
-            } else {
-                alert('您的浏览器不支持语音输入');
-            }
-        }
-        
-        // 快捷键支持
-        document.getElementById('mainInput').addEventListener('keydown', function(e) {
+        // 支持回车键发送
+        document.getElementById('messageInput').addEventListener('keydown', function(e) {
             if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
                 e.preventDefault();
                 sendMessage();
             }
         });
         
-        // 更新使用次数显示
-        async function updateUsageIndicator() {
-            try {
-                const response = await fetch(`${API_BASE}/usage`);
-                const data = await response.json();
-                
-                if (data.success && data.usage) {
-                    const usage = data.usage;
-                    const indicator = document.getElementById('usageIndicator');
-                    const text = document.getElementById('usageText');
-                    
-                    if (usage.remaining <= 0) {
-                        text.textContent = `免费额度已用完 (${usage.used}/${usage.limit})`;
-                        indicator.className = 'usage-indicator danger';
-                    } else if (usage.remaining === 1) {
-                        text.textContent = `最后 ${usage.remaining} 次免费使用`;
-                        indicator.className = 'usage-indicator warning';
-                    } else {
-                        text.textContent = `剩余 ${usage.remaining} 次免费使用`;
-                        indicator.className = 'usage-indicator';
-                    }
-                    
-                    indicator.style.display = 'block';
-                }
-            } catch (error) {
-                console.error('获取使用状态失败:', error);
-            }
-        }
-        
-        // 初始化页面
-        document.addEventListener('DOMContentLoaded', function() {
-            updateSuggestions('slides');
-            updateUsageIndicator();
-        });
+        // 页面加载完成提示
+        window.onload = function() {
+            console.log('✅ JELILIAN AI 已加载完成');
+        };
     </script>
 </body>
 </html>
