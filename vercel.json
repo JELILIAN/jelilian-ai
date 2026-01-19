@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "name": "jelilian-ai",
   "builds": [
     {
       "src": "server.js",
@@ -17,24 +16,8 @@
       "dest": "/public-client.html"
     },
     {
-      "src": "/payment-system.html",
-      "dest": "/payment-system.html"
-    },
-    {
-      "src": "/admin-dashboard.html", 
-      "dest": "/admin-dashboard.html"
-    },
-    {
-      "src": "/(.*\\.(html|css|js|json|ico|png|jpg|jpeg|gif|svg))",
+      "src": "/(.*)",
       "dest": "/$1"
     }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  },
-  "functions": {
-    "server.js": {
-      "maxDuration": 10
-    }
-  }
+  ]
 }
