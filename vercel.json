@@ -1,21 +1,10 @@
 {
   "version": 2,
+  "name": "jelilian-ai",
   "builds": [
     {
       "src": "server.js",
       "use": "@vercel/node"
-    },
-    {
-      "src": "*.html",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "*.css",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "*.js",
-      "use": "@vercel/static"
     }
   ],
   "routes": [
@@ -24,11 +13,28 @@
       "dest": "/server.js"
     },
     {
-      "src": "/(.*)",
+      "src": "/",
+      "dest": "/public-client.html"
+    },
+    {
+      "src": "/payment-system.html",
+      "dest": "/payment-system.html"
+    },
+    {
+      "src": "/admin-dashboard.html", 
+      "dest": "/admin-dashboard.html"
+    },
+    {
+      "src": "/(.*\\.(html|css|js|json|ico|png|jpg|jpeg|gif|svg))",
       "dest": "/$1"
     }
   ],
   "env": {
     "NODE_ENV": "production"
+  },
+  "functions": {
+    "server.js": {
+      "maxDuration": 10
+    }
   }
 }
