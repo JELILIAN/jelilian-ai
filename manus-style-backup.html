@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JELILIAN - AI助手</title>
+    <style>
+        body { font-family: system-ui; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; margin: 0; }
+        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { color: #6366f1; margin-bottom: 10px; font-size: 2.5rem; }
+        .header p { color: #6b7280; font-size: 1.1rem; }
+        .section { margin: 30px 0; padding: 25px; border: 1px solid #e0e0e0; border-radius: 12px; background: #fafafa; }
+        .section h3 { color: #1f2937; margin-bottom: 20px; font-size: 1.3rem; }
+        .input-group { margin: 20px 0; }
+        .input-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #374151; }
+        .input-group input, .input-group textarea, .input-group select { 
+            width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; 
+            font-family: inherit; transition: border-color 0.3s; font-size: 16px;
+        }
+        .input-group input:focus, .input-group textarea:focus, .input-group select:focus {
+            outline: none; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        .input-group textarea { height: 120px; resize: vertical; }
+        .btn { 
+            background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; border: none; 
+            padding: 14px 28px; border-radius: 8px; cursor: pointer; font-weight: 600; 
+            margin: 8px; transition: all 0.3s; font-size: 16px; text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3); }
+        .btn-success { background: linear-gradient(135deg, #10b981, #059669); }
+        .btn-warning { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .btn-secondary { background: linear-gradient(135deg, #6b7280, #4b5563); }
+        .result { margin-top: 20px; padding: 20px; border-radius: 10px; }
+        .success { background: linear-gradient(135deg, #d1fae5, #a7f3d0); color: #065f46; border: 2px solid #10b981; }
+        .error { background: linear-gradient(135deg, #fee2e2, #fecaca); color: #991b1b; border: 2px solid #ef4444; }
+        .info { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1e40af; border: 2px solid #3b82f6; }
+        .warning { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e; border: 2px solid #f59e0b; }
+        .chat-container { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
+        .chat-messages { 
+            height: 450px; overflow-y: auto; border: 2px solid #e5e7eb; border-radius: 12px; 
+            padding: 20px; background: linear-gradient(135deg, #f8fafc, #f1f5f9); 
+        }
+        .message { margin-bottom: 20px; }
+        .user-message { text-align: right; }
+        .user-message .content { 
+            background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; 
+            padding: 12px 18px; border-radius: 20px 20px 6px 20px; display: inline-block; 
+            max-width: 80%; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+        .ai-message .content { 
+            background: white; color: #1f2937; padding: 12px 18px; 
+            border-radius: 20px 20px 20px 6px; display: inline-block; max-width: 80%; 
+            border: 2px solid #e5e7eb; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .message-meta { font-size: 12px; color: #6b7280; margin-top: 8px; }
+        .loading { 
+            display: inline-block; width: 20px; height: 20px; 
+            border: 3px solid #f3f3f3; border-top: 3px solid #6366f1; 
+            border-radius: 50%; animation: spin 1s linear infinite; 
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; margin: 25px 0; }
+        .stat-card { 
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0); padding: 20px; 
+            border-radius: 12px; text-align: center; border: 2px solid #e5e7eb; 
+            transition: transform 0.3s;
+        }
+        .stat-card:hover { transform: translateY(-4px); }
+        .stat-number { font-size: 2rem; font-weight: bold; color: #6366f1; }
+        .stat-label { font-size: 1rem; color: #6b7280; margin-top: 5px; }
+        .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 30px 0; }
+        .feature-card { 
+            background: white; padding: 25px; border-radius: 12px; 
+            border: 2px solid #e5e7eb; transition: all 0.3s;
+            cursor: pointer; position: relative; overflow: hidden;
+        }
+        .feature-card:hover { 
+            transform: translateY(-5px); 
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1); 
+            border-color: #6366f1;
+        }
+        .feature-card::after {
+            content: ''; position: absolute; top: 0; right: 0;
+            width: 0; height: 0; border-style: solid;
+            border-width: 0 20px 20px 0;
+            border-color: transparent #6366f1 transparent transparent;
+            opacity: 0; transition: opacity 0.3s;
+        }
+        .feature-card:hover::after { opacity: 1; }
+        .feature-icon { font-size: 2.5rem; margin-bottom: 15px; }
+        .feature-title { font-size: 1.2rem; font-weight: bold; color: #1f2937; margin-bottom: 10px; }
+        .feature-desc { color: #6b7280; line-height: 1.6; margin-bottom: 10px; }
+        .feature-tag { 
+            background: #f0f9ff; color: #0369a1; padding: 4px 8px; 
+            border-radius: 12px; font-size: 0.8rem; font-weight: 500;
+        }
+        
+        .quick-btn {
+            background: #f3f4f6; color: #374151; border: none; padding: 8px 12px;
+            border-radius: 20px; cursor: pointer; font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        .quick-btn:hover {
+            background: #6366f1; color: white; transform: translateY(-2px);
+        }
+        
+        .input-group label {
+            display: block; margin-bottom: 8px; font-weight: 600; color: #374151;
+        }
+        
+        .chat-container {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 0;
+        }
+        
+        @media (max-width: 768px) {
+            .chat-container { grid-template-columns: 1fr; }
+            .config-section > div:first-child { grid-template-columns: 1fr !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="top-nav">
+            <div class="logo">
+                <h1>JELILIAN</h1>
+                <span style="background: #10b981; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem;">AI助手</span>
+            </div>
+            <div class="nav-buttons">
+                <a href="/payment-system.html" class="nav-btn secondary">💎 升级专业版</a>
+                <a href="/admin-dashboard.html" class="nav-btn secondary">📊 管理后台</a>
+                <button class="nav-btn primary" onclick="showHelp()">❓ 帮助</button>
+            </div>
+        </div>
+        
+        <div class="header">
+            <h2 style="text-align: center; color: #1f2937; margin-bottom: 10px;">🚀 开始你的AI创作之旅</h2>
+            <p style="text-align: center; color: #6b7280; margin-bottom: 20px;">输入API密钥，解锁无限创作可能</p>
+            <div id="subscriptionStatus"></div>
+        </div>
+        
+        <div class="features-showcase" style="margin: 30px 0;">
+            <h3 style="text-align: center; color: #1f2937; margin-bottom: 25px;">✨ 强大功能一览</h3>
+            <div class="feature-grid">
+                <div class="feature-card" onclick="setQuickPrompt('帮我创建一个现代化的企业官网')">
+                    <div class="feature-icon">🌐</div>
+                    <div class="feature-title">网站构建</div>
+                    <div class="feature-desc">一句话生成完整网站，包含前端后端数据库</div>
+                    <div class="feature-tag">点击试用</div>
+                </div>
+                <div class="feature-card" onclick="setQuickPrompt('写一份专业的产品营销文案')">
+                    <div class="feature-icon">✍️</div>
+                    <div class="feature-title">内容创作</div>
+                    <div class="feature-desc">AI驱动的文案写作、博客创作和营销内容</div>
+                    <div class="feature-tag">点击试用</div>
+                </div>
+                <div class="feature-card" onclick="setQuickPrompt('帮我写一个Python数据分析脚本')">
+                    <div class="feature-icon">💻</div>
+                    <div class="feature-title">代码生成</div>
+                    <div class="feature-desc">智能代码生成、调试和优化，支持多语言</div>
+                    <div class="feature-tag">点击试用</div>
+                </div>
+                <div class="feature-card" onclick="setQuickPrompt('制作一份商业计划书PPT大纲')">
+                    <div class="feature-icon">📊</div>
+                    <div class="feature-title">商业助手</div>
+                    <div class="feature-desc">商业计划、数据分析、报告生成</div>
+                    <div class="feature-tag">点击试用</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="config-section" style="background: #f8fafc; padding: 30px; border-radius: 15px; margin: 30px 0;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+                <h3 style="color: #1f2937; margin: 0;">⚙️ 快速配置</h3>
+                <span style="background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 10px; font-size: 0.8rem;">2分钟设置</span>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                <div class="input-group">
+                    <label>🤖 AI服务商</label>
+                    <select id="provider" style="padding: 12px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 1rem;">
+                        <option value="qwen">🇨🇳 阿里千问 (推荐)</option>
+                        <option value="openai">🌍 OpenAI GPT</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>🔑 API密钥</label>
+                    <input type="password" id="apiKey" placeholder="sk-..." style="padding: 12px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 1rem;">
+                </div>
+                <div class="input-group">
+                    <label>🎯 模型选择</label>
+                    <select id="model" style="padding: 12px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 1rem;">
+                        <option value="">智能选择</option>
+                        <option value="qwen-turbo">千问-快速版</option>
+                        <option value="qwen-plus">千问-平衡版</option>
+                        <option value="qwen-max">千问-最强版</option>
+                        <option value="gpt-3.5-turbo">GPT-3.5</option>
+                        <option value="gpt-4">GPT-4</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                <button class="btn btn-success" onclick="testConnection()" style="padding: 12px 24px; font-size: 1rem;">
+                    🚀 测试连接
+                </button>
+                <button class="btn btn-secondary" onclick="getProviders()" style="padding: 12px 24px; font-size: 1rem;">
+                    📋 查看服务商
+                </button>
+                <button class="btn btn-warning" onclick="upgradeToPro()" style="padding: 12px 24px; font-size: 1rem;">
+                    💎 升级专业版
+                </button>
+                <button class="btn" onclick="showAPIHelp()" style="padding: 12px 24px; font-size: 1rem; background: #8b5cf6;">
+                    ❓ 获取API密钥
+                </button>
+            </div>
+            <div id="configResult"></div>
+        </div>
+        
+        <div class="chat-section" style="background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin: 30px 0;">
+            <div class="chat-header" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; padding: 20px; text-align: center;">
+                <h3 style="margin: 0; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                    💬 AI智能对话
+                    <span style="background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 10px; font-size: 0.8rem;">实时响应</span>
+                </h3>
+            </div>
+            
+            <div class="chat-container">
+                <div class="chat-input-area" style="padding: 20px;">
+                    <div class="quick-actions" style="margin-bottom: 20px;">
+                        <h4 style="color: #374151; margin-bottom: 10px;">🎯 快速开始</h4>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button class="quick-btn" onclick="setQuickPrompt('创建一个餐厅网站，包含菜单和预订功能')">🍽️ 餐厅网站</button>
+                            <button class="quick-btn" onclick="setQuickPrompt('写一份产品发布会的新闻稿')">📰 新闻稿</button>
+                            <button class="quick-btn" onclick="setQuickPrompt('制作一个Python爬虫脚本')">🐍 Python代码</button>
+                            <button class="quick-btn" onclick="setQuickPrompt('设计一个Logo的创意方案')">🎨 Logo设计</button>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label style="font-weight: 600; color: #374151;">💭 描述你的需求</label>
+                        <textarea id="message" placeholder="例如：帮我创建一个现代化的电商网站，包含商品展示、购物车、支付功能..." 
+                                style="height: 120px; padding: 15px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 1rem; resize: vertical; font-family: inherit;"></textarea>
+                    </div>
+                    
+                    <div style="display: flex; gap: 15px; margin-top: 15px;">
+                        <button class="btn" onclick="sendMessage()" style="flex: 1; padding: 15px; font-size: 1.1rem; background: linear-gradient(135deg, #6366f1, #8b5cf6);">
+                            🚀 发送消息
+                        </button>
+                        <button class="btn btn-warning" onclick="clearChat()" style="padding: 15px 20px;">
+                            🗑️ 清空
+                        </button>
+                    </div>
+                    
+                    <div class="stats" id="chatStats" style="margin-top: 20px;">
+                        <div class="stat-card">
+                            <div class="stat-number" id="messageCount">0</div>
+                            <div class="stat-label">对话次数</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="avgResponseTime">0ms</div>
+                            <div class="stat-label">响应速度</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="totalTokens">0</div>
+                            <div class="stat-label">Token使用</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chat-messages-area" style="padding: 20px; border-left: 2px solid #f3f4f6;">
+                    <h4 style="color: #374151; margin-bottom: 15px;">📝 对话记录</h4>
+                    <div class="chat-messages" id="chatMessages" style="height: 450px; overflow-y: auto; border: 2px solid #f3f4f6; border-radius: 10px; padding: 15px; background: #fafafa;">
+                        <div class="message ai-message">
+                            <div class="content" style="background: linear-gradient(135deg, #e0e7ff, #c7d2fe); color: #3730a3; padding: 15px; border-radius: 15px; margin-bottom: 10px;">
+                                👋 欢迎使用JELILIAN AI助手！
+                                <br><br>
+                                我可以帮您：
+                                <br>• 🌐 创建完整网站
+                                <br>• ✍️ 撰写各类文案
+                                <br>• 💻 生成代码程序
+                                <br>• 📊 制作商业文档
+                                <br><br>
+                                请先配置API密钥，然后开始对话！
+                            </div>
+                            <div class="message-meta" style="font-size: 0.8rem; color: #9ca3af;">AI助手 • 刚刚</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 自动检测API基础URL
+        const API_BASE = window.location.origin + '/api';
+        let messageCount = 0;
+        let totalResponseTime = 0;
+        let totalTokens = 0;
+        let userSubscription = null;
+        
+        // 页面加载时检查用户订阅
+        document.addEventListener('DOMContentLoaded', function() {
+            checkUserSubscription();
+            // 自动检查服务器状态，但不显示加载信息
+            checkServerStatus();
+        });
+        
+        async function checkServerStatus() {
+            // 静默检查服务器状态，不显示加载信息
+            try {
+                const response = await fetch(`${API_BASE}/providers`);
+                if (response.ok) {
+                    // 服务器正常，不需要显示任何信息
+                    console.log('✅ 服务器连接正常');
+                }
+            } catch (error) {
+                // 服务器异常时才显示错误
+                console.error('❌ 服务器连接失败:', error);
+            }
+        }
+        
+        async function testConnection() {
+            const provider = document.getElementById('provider').value;
+            const apiKey = document.getElementById('apiKey').value.trim();
+            const resultDiv = document.getElementById('configResult');
+            
+            if (!apiKey) {
+                resultDiv.innerHTML = '<div class="result error">❌ 请输入API密钥</div>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<div class="result info">🔄 正在测试连接...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/test`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        provider: provider,
+                        apiKey: apiKey
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="result success">
+                            ✅ 连接测试成功！<br>
+                            <strong>服务商:</strong> ${data.provider}<br>
+                            <strong>响应时间:</strong> ${data.responseTime}ms<br>
+                            <strong>测试响应:</strong> ${data.testResponse}
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="result error">
+                            ❌ 连接测试失败<br>
+                            <strong>错误:</strong> ${data.error}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        ❌ 请求失败: ${error.message}<br>
+                        请检查网络连接
+                    </div>
+                `;
+            }
+        }
+        
+        async function sendMessage() {
+            // 检查使用限制
+            if (!checkUsageLimit()) {
+                return;
+            }
+            
+            const provider = document.getElementById('provider').value;
+            const apiKey = document.getElementById('apiKey').value.trim();
+            const message = document.getElementById('message').value.trim();
+            const model = document.getElementById('model').value;
+            
+            if (!apiKey || !message) {
+                alert('请输入API密钥和消息内容');
+                return;
+            }
+            
+            // 添加用户消息到聊天
+            addMessageToChat(message, 'user');
+            
+            // 显示加载状态
+            const loadingId = addMessageToChat('正在思考...', 'ai', true);
+            
+            try {
+                const response = await fetch(`${API_BASE}/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        provider: provider,
+                        apiKey: apiKey,
+                        options: {
+                            model: model || undefined,
+                            maxTokens: 2000,
+                            temperature: 0.8
+                        }
+                    })
+                });
+                
+                const data = await response.json();
+                
+                // 移除加载消息
+                removeMessage(loadingId);
+                
+                if (data.success) {
+                    // 添加AI响应
+                    addMessageToChat(data.text, 'ai', false, {
+                        responseTime: data.responseTime,
+                        tokens: data.tokens,
+                        model: data.model
+                    });
+                    
+                    // 更新统计
+                    updateStats(data.responseTime, data.tokens);
+                    
+                    // 清空输入框
+                    document.getElementById('message').value = '';
+                    
+                } else {
+                    addMessageToChat(`❌ 错误: ${data.error}`, 'ai');
+                }
+                
+            } catch (error) {
+                removeMessage(loadingId);
+                addMessageToChat(`❌ 请求失败: ${error.message}`, 'ai');
+            }
+        }
+        
+        function addMessageToChat(content, type, isLoading = false, meta = null) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}-message`;
+            messageDiv.id = messageId;
+            
+            let metaInfo = '';
+            if (meta) {
+                metaInfo = `<div class="message-meta">
+                    响应时间: ${meta.responseTime}ms | 
+                    Token: ${meta.tokens} | 
+                    模型: ${meta.model}
+                </div>`;
+            } else if (type === 'user') {
+                metaInfo = `<div class="message-meta">${new Date().toLocaleTimeString()}</div>`;
+            }
+            
+            messageDiv.innerHTML = `
+                <div class="content">
+                    ${isLoading ? '<span class="loading"></span> ' : ''}${content}
+                </div>
+                ${metaInfo}
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            return messageId;
+        }
+        
+        function removeMessage(messageId) {
+            const messageElement = document.getElementById(messageId);
+            if (messageElement) {
+                messageElement.remove();
+            }
+        }
+        
+        function updateStats(responseTime, tokens) {
+            messageCount++;
+            totalResponseTime += responseTime;
+            totalTokens += tokens;
+            
+            document.getElementById('messageCount').textContent = messageCount;
+            document.getElementById('avgResponseTime').textContent = 
+                Math.round(totalResponseTime / messageCount) + 'ms';
+            document.getElementById('totalTokens').textContent = totalTokens;
+        }
+        
+        function clearChat() {
+            document.getElementById('chatMessages').innerHTML = `
+                <div class="message ai-message">
+                    <div class="content">对话已清空，可以开始新的对话。</div>
+                    <div class="message-meta">系统消息</div>
+                </div>
+            `;
+            
+            // 重置统计
+            messageCount = 0;
+            totalResponseTime = 0;
+            totalTokens = 0;
+            updateStats(0, 0);
+        }
+        
+        async function getProviders() {
+            const resultDiv = document.getElementById('configResult');
+            
+            try {
+                const response = await fetch(`${API_BASE}/providers`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const providersList = data.providers.map(p => 
+                        `• <strong>${p.name}</strong>: ${p.description}`
+                    ).join('<br>');
+                    
+                    resultDiv.innerHTML = `
+                        <div class="result info">
+                            <strong>📋 支持的AI服务商:</strong><br><br>
+                            ${providersList}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="result error">❌ 获取服务商信息失败: ${error.message}</div>`;
+            }
+        }
+        
+        // 快捷键支持
+        document.getElementById('message').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+        
+        // 检查用户订阅状态
+        function checkUserSubscription() {
+            const subscription = localStorage.getItem('jelilian_subscription');
+            const statusDiv = document.getElementById('subscriptionStatus');
+            
+            if (subscription) {
+                const data = JSON.parse(subscription);
+                const now = new Date();
+                const expires = new Date(data.expires);
+                
+                if (now < expires) {
+                    // 有效订阅
+                    userSubscription = data;
+                    statusDiv.innerHTML = `
+                        <div class="result success">
+                            ✨ ${data.plan === 'pro' ? '专业版' : '企业版'}用户 | 
+                            到期: ${expires.toLocaleDateString()} | 
+                            <a href="/payment-system.html" style="color: #065f46;">管理订阅</a>
+                        </div>
+                    `;
+                    
+                    // 如果用户有自定义API密钥，自动填入
+                    if (data.api_key) {
+                        document.getElementById('apiKey').value = data.api_key;
+                    }
+                } else {
+                    // 订阅已过期
+                    statusDiv.innerHTML = `
+                        <div class="result warning">
+                            ⚠️ 您的订阅已过期，请续费以继续使用高级功能
+                            <button class="btn" onclick="upgradeToPro()" style="margin-left: 10px;">立即续费</button>
+                        </div>
+                    `;
+                }
+            } else {
+                // 免费用户
+                statusDiv.innerHTML = `
+                    <div class="result info">
+                        🆓 免费用户 (每日限制10次对话) | 
+                        <a href="/payment-system.html" style="color: #1e40af;">升级专业版</a>
+                    `;
+            }
+        }
+        
+        // 检查使用限制
+        function checkUsageLimit() {
+            if (userSubscription && userSubscription.plan !== 'free') {
+                return true; // 付费用户无限制
+            }
+            
+            // 免费用户检查每日限制
+            const today = new Date().toDateString();
+            const usageKey = 'jelilian_daily_usage_' + today;
+            const dailyUsage = parseInt(localStorage.getItem(usageKey) || '0');
+            
+            if (dailyUsage >= 10) {
+                alert('您今日的免费额度已用完！升级到专业版享受无限制使用。');
+                upgradeToPro();
+                return false;
+            }
+            
+            // 增加使用次数
+            localStorage.setItem(usageKey, (dailyUsage + 1).toString());
+            return true;
+        }
+        
+        function upgradeToPro() {
+            window.open('/payment-system.html', '_blank');
+        }
+        
+        function setQuickPrompt(prompt) {
+            document.getElementById('message').value = prompt;
+            document.getElementById('message').focus();
+        }
+        
+        function showHelp() {
+            alert(`🤖 JELILIAN AI助手使用指南：
+
+1️⃣ 获取API密钥：
+   • 阿里千问：访问 dashscope.console.aliyun.com
+   • OpenAI：访问 platform.openai.com
+
+2️⃣ 配置密钥：
+   • 选择服务商
+   • 输入API密钥
+   • 点击测试连接
+
+3️⃣ 开始对话：
+   • 描述你的需求
+   • AI会智能理解并回复
+   • 支持网站、文案、代码等
+
+4️⃣ 升级专业版：
+   • 免费版：每日10次对话
+   • 专业版：无限制使用
+   • 仅需29元/月
+
+需要帮助请联系客服！`);
+        }
+        
+        function showAPIHelp() {
+            const helpContent = `
+            <div style="text-align: left;">
+                <h3>🔑 如何获取API密钥</h3>
+                
+                <h4>🇨🇳 阿里千问 (推荐)</h4>
+                <p>1. 访问：<a href="https://dashscope.console.aliyun.com" target="_blank">dashscope.console.aliyun.com</a></p>
+                <p>2. 注册/登录阿里云账号</p>
+                <p>3. 开通DashScope服务</p>
+                <p>4. 创建API密钥</p>
+                <p>5. 复制密钥到这里使用</p>
+                
+                <h4>🌍 OpenAI GPT</h4>
+                <p>1. 访问：<a href="https://platform.openai.com" target="_blank">platform.openai.com</a></p>
+                <p>2. 注册OpenAI账号</p>
+                <p>3. 充值账户余额</p>
+                <p>4. 创建API密钥</p>
+                <p>5. 复制密钥到这里使用</p>
+                
+                <p><strong>💡 提示：</strong>阿里千问对中文支持更好，价格更便宜！</p>
+            </div>
+            `;
+            
+            document.getElementById('configResult').innerHTML = `
+                <div class="result info" style="margin-top: 20px;">
+                    ${helpContent}
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
