@@ -1,9 +1,15 @@
 {
   "name": "jelilian-smart-ai",
+  "functions": {
+    "server.js": {
+      "runtime": "@vercel/node@3",
+      "maxDuration": 30
+    }
+  },
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "/api/$1"
+      "destination": "/server.js"
     },
     {
       "source": "/",
